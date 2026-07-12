@@ -613,6 +613,18 @@
       }
     }
 
+    // Validación cruzada de fechas: el regreso no puede ser anterior al inicio.
+    var start = state.answers.travel_start_date;
+    var end = state.answers.travel_end_date;
+    var hasStart = questions.some(function (q) {
+      return q.id === "travel_start_date";
+    });
+    if (hasStart && !isEmpty(start) && !isEmpty(end) && end < start) {
+      var dateMessage = "La fecha de regreso no puede ser anterior a la de inicio.";
+      highlightQuestionError("travel_end_date", dateMessage);
+      return { valid: false, message: dateMessage };
+    }
+
     return { valid: true };
   }
 
@@ -872,13 +884,15 @@
       return;
     }
 
-    if (question.type === "textarea" || question.type === "text") {
+    if (question.type === "textarea") {
       var text = normalizeText(value).toLowerCase();
       if (!text) {
         return;
       }
-      applyKeywordScores(text, raw, trace, question);
+      var direction = question.id === "avoid" ? -1 : 1;
+      applyKeywordScores(text, raw, trace, question, direction);
     }
+    // Campos "text" (nombre, ciudad) no aportan señal de scoring.
   }
 
   function applyScoreMap(scores, raw, trace, question, option) {
@@ -903,7 +917,7 @@
     });
   }
 
-  function applyKeywordScores(text, raw, trace, question) {
+  function applyKeywordScores(text, raw, trace, question, direction) {
     var keywordMap = {
       explorer: ["explorar", "explore", "hidden", "gems", "aventura", "descubrir"],
       foodie: ["food", "comida", "restaurante", "chef", "tasting", "cocina"],
@@ -950,12 +964,21 @@
     Object.keys(keywordMap).forEach(function (archetypeId) {
       var terms = keywordMap[archetypeId];
       var matched = terms.some(function (term) {
-        return text.indexOf(term) !== -1;
+        return matchesWholeTerm(text, term);
       });
       if (matched) {
-        bumpScore(raw, trace, question, archetypeId, 1, "keyword");
+        var amount = 1 * (direction || 1);
+        bumpScore(raw, trace, question, archetypeId, amount, direction === -1 ? "keyword-avoid" : "keyword");
       }
     });
+  }
+
+  function matchesWholeTerm(text, term) {
+    // Coincidencia por palabra completa: evita "van" en "vancouver" y "art" en "cuarto".
+    // \b no funciona bien con acentos, así que usamos separadores explícitos.
+    var escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    var pattern = new RegExp("(^|[^a-záéíóúüñ0-9])" + escaped + "($|[^a-záéíóúüñ0-9])", "i");
+    return pattern.test(text);
   }
 
   function collectReasons(archetypeId, trace) {
