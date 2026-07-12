@@ -1,11 +1,12 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "1.1.0";
+  var APP_VERSION = "1.2.0";
   var INTEREST_GATE_SECTION_ID = "interest-gate";
   var INTEREST_GATE_QUESTION_ID = "interest_gate";
   var STORAGE_KEY = "travel-os.traveler-dna.draft.v1";
   var FINAL_KEY = "travel-os.traveler-dna.final.v1";
+  var interestGateWarningShown = false;
 
   var state = {
     screen: "welcome",
@@ -24,7 +25,6 @@
   var maxPotential = {};
   var sectionMap = {};
   var interestGateCatalog = [];
-  var interestGateOptionMap = {};
   var interestGateSectionMap = {};
   var dom = {};
   var currentSection = null;
@@ -110,6 +110,7 @@
     dom.discardButton.addEventListener("click", function () {
       resetStorage();
       state = createDefaultState();
+      interestGateWarningShown = false;
       renderWelcome();
       hideResumeBanner();
       toast("Borrador descartado", "Puedes empezar desde cero.");
@@ -142,7 +143,6 @@
     archetypeMap = {};
     sectionMap = {};
     interestGateCatalog = [];
-    interestGateOptionMap = {};
     interestGateSectionMap = {};
     maxPotential = {};
     (survey.archetypes || []).forEach(function (item) {
@@ -165,7 +165,6 @@
           label: option.label,
           sectionIds: uniqueList(Array.isArray(option.sectionIds) ? option.sectionIds.slice() : [])
         };
-        interestGateOptionMap[entry.value] = entry;
         entry.sectionIds.forEach(function (sectionId) {
           if (!interestGateSectionMap[sectionId]) {
             interestGateSectionMap[sectionId] = [];
@@ -329,6 +328,18 @@
   function nextSection() {
     if (!currentSection) {
       return;
+    }
+
+    if (currentSection.id === INTEREST_GATE_SECTION_ID) {
+      var selectedInterests = getSelectedInterestValues();
+      if (!selectedInterests.length && !interestGateWarningShown) {
+        interestGateWarningShown = true;
+        toast(
+          "Perfil básico",
+          "Sin categorías tu perfil será básico. Pulsa de nuevo para continuar o marca al menos una categoría."
+        );
+        return;
+      }
     }
 
     var validation = validateSection(currentSection);
@@ -653,6 +664,9 @@
     if (questionId === "traveler_name") {
       state.name = normalizeText(value);
     }
+    if (questionId === INTEREST_GATE_QUESTION_ID) {
+      interestGateWarningShown = false;
+    }
     state.updatedAt = new Date().toISOString();
     saveDraft();
     updateResumeBanner();
@@ -847,6 +861,13 @@
 
     var resolvedIndex = getVisibleSectionIndex(sections, state.currentSectionId);
     if (resolvedIndex === -1) {
+      var gateIndex = getVisibleSectionIndex(sections, INTEREST_GATE_SECTION_ID);
+      if (gateIndex !== -1) {
+        resolvedIndex = gateIndex;
+      }
+    }
+
+    if (resolvedIndex === -1) {
       resolvedIndex = clamp(state.sectionIndex, 0, sections.length - 1);
     }
 
@@ -995,6 +1016,29 @@
     return result;
   }
 
+  function countMapKeys(map) {
+    if (!map || typeof map !== "object") {
+      return 0;
+    }
+    return Object.keys(map).length;
+  }
+
+  function calculateGlobalConfidence(top) {
+    if (!Array.isArray(top) || !top.length) {
+      return 0;
+    }
+
+    var weightedTotal = 0;
+    var weightSum = 0;
+    top.forEach(function (item) {
+      var weight = Math.max(1, item.scorePercent || 0);
+      weightedTotal += weight * (item.confidencePercent || 0);
+      weightSum += weight;
+    });
+
+    return weightSum ? Math.round(weightedTotal / weightSum) : 0;
+  }
+
   function goToScreen(screenName) {
     state.screen = screenName;
     var screens = [dom.screenWelcome, dom.screenSurvey, dom.screenSummary, dom.screenThanks];
@@ -1041,6 +1085,10 @@
       dom.summaryArchetypes.appendChild(renderResultCard(item));
     });
 
+    if (!currentSummary.archetypes.length) {
+      dom.summaryArchetypes.appendChild(renderEmptyStateCard(currentSummary.copy));
+    }
+
     currentSummary.signals.forEach(function (item) {
       dom.summarySignals.appendChild(renderSignalCard(item));
     });
@@ -1056,6 +1104,10 @@
   function renderResultCard(item) {
     var card = document.createElement("article");
     card.className = "result-card";
+    var affinityPercent = typeof item.affinityPercent === "number" ? item.affinityPercent : item.scorePercent;
+    var confidencePercent = typeof item.confidencePercent === "number" ? item.confidencePercent : 0;
+    var answeredQuestions = Number(item.answeredQuestions) || 0;
+    var questionLabel = answeredQuestions === 1 ? "1 pregunta" : answeredQuestions + " preguntas";
     var reasonHtml = item.reasons.length ? "<p>" + escapeHtml(item.reasons.join(" · ")) + "</p>" : "<p>Sin señales dominantes todavía.</p>";
     card.innerHTML =
       "<h3>" +
@@ -1063,15 +1115,25 @@
       "</h3>" +
       "<div class='score-row'>" +
       "<div class='score-meta'><span>" +
-      escapeHtml(item.scoreLabel) +
+      "Afinidad" +
       "</span><span>" +
-      escapeHtml(String(item.scorePercent)) +
+      escapeHtml(String(affinityPercent)) +
       "%</span></div>" +
       "<div class='score-bar'><span style='width:" +
-      item.scorePercent +
+      affinityPercent +
       "%'></span></div>" +
+      "<p>" +
+      escapeHtml("Confidence " + confidencePercent + "% · " + questionLabel) +
+      "</p>" +
       "</div>" +
       reasonHtml;
+    return card;
+  }
+
+  function renderEmptyStateCard(message) {
+    var card = document.createElement("article");
+    card.className = "signal-card";
+    card.innerHTML = "<h3>Sin arquetipos visibles</h3><p>" + escapeHtml(message) + "</p>";
     return card;
   }
 
@@ -1095,6 +1157,7 @@
       ],
       archetypes: profile.topArchetypes,
       signals: [
+        { label: "Confidence", value: profile.signals.confidence },
         { label: "Destino preferido", value: profile.signals.destination },
         { label: "Flexibilidad", value: profile.signals.flexibility },
         { label: "Compañía", value: profile.signals.party },
@@ -1117,33 +1180,50 @@
     var scoring = scoreAnswers(visibleSections);
     var rawScores = scoring.raw;
     var trace = scoring.trace;
+    var answeredPotential = scoring.answeredPotential;
+    var answeredQuestionMap = scoring.answeredQuestionMap;
     var archetypes = (survey.archetypes || []).map(function (item) {
       var score = rawScores[item.id] || 0;
       var potential = Math.max(1, maxPotential[item.id] || 1);
-      var percent = Math.min(100, Math.round((score / potential) * 100));
+      var confidencePotential = answeredPotential[item.id] || 0;
+      var affinityPercent = confidencePotential > 0 ? Math.max(0, Math.min(100, Math.round((score / confidencePotential) * 100))) : 0;
+      var confidencePercent = Math.min(100, Math.round((confidencePotential / potential) * 100));
+      var answeredQuestions = countMapKeys(answeredQuestionMap[item.id]);
       return {
         id: item.id,
         label: item.label,
         score: score,
-        scorePercent: percent,
-        scoreLabel: score.toFixed(1),
+        scorePercent: affinityPercent,
+        affinityPercent: affinityPercent,
+        confidencePercent: confidencePercent,
+        confidenceLabel: confidencePercent + "%",
+        answeredPotential: confidencePotential,
+        answeredQuestions: answeredQuestions,
         reasons: collectReasons(item.id, trace)
       };
     });
 
     archetypes.sort(function (a, b) {
-      if (b.score !== a.score) {
-        return b.score - a.score;
+      if (b.scorePercent !== a.scorePercent) {
+        return b.scorePercent - a.scorePercent;
       }
-      return b.scorePercent - a.scorePercent;
+      if (b.confidencePercent !== a.confidencePercent) {
+        return b.confidencePercent - a.confidencePercent;
+      }
+      if (b.answeredQuestions !== a.answeredQuestions) {
+        return b.answeredQuestions - a.answeredQuestions;
+      }
+      return b.score - a.score;
     });
 
-    var top = archetypes.slice(0, 6).filter(function (item) {
-      return item.score > 0;
+    var visibleTop = archetypes.filter(function (item) {
+      return item.scorePercent > 0 && item.confidencePercent >= 25 && item.answeredQuestions >= 2;
     });
+    var top = visibleTop.slice(0, 6);
+    var confidencePercent = calculateGlobalConfidence(top);
 
-    var signals = buildSignals(visibleAnswers, gating);
-    var narrative = buildNarrative(top, signals);
+    var signals = buildSignals(visibleAnswers, gating, confidencePercent);
+    var narrative = buildNarrative(top, signals, confidencePercent);
 
     return {
       version: APP_VERSION,
@@ -1153,6 +1233,9 @@
       name: state.name,
       answers: visibleAnswers,
       scores: rawScores,
+      confidence: confidencePercent,
+      confidencePercent: confidencePercent,
+      confidenceLabel: confidencePercent + "%",
       topArchetypes: top,
       allArchetypes: archetypes,
       signals: signals,
@@ -1166,25 +1249,29 @@
   }
 
   function scoreAnswers(sections) {
-    var raw = {};
-    var trace = {};
+    var scoreState = {
+      raw: {},
+      trace: {},
+      answeredPotential: {},
+      answeredQuestionMap: {}
+    };
     (sections || getVisibleSections()).forEach(function (section) {
       (section.questions || []).forEach(function (question) {
         var value = state.answers[question.id];
         if (isEmpty(value)) {
           return;
         }
-        applyQuestionScore(question, value, raw, trace);
+        applyQuestionScore(question, value, scoreState);
       });
     });
-    return { raw: raw, trace: trace };
+    return scoreState;
   }
 
-  function applyQuestionScore(question, value, raw, trace) {
+  function applyQuestionScore(question, value, scoreState) {
     if (question.type === "single") {
       var option = findOption(question, value);
       if (option) {
-        applyScoreMap(option.scores || {}, raw, trace, question, option);
+        applyScoreMap(option.scores || {}, scoreState, question, option);
       }
       return;
     }
@@ -1194,9 +1281,12 @@
       values.forEach(function (item) {
         var multiOption = findOption(question, item);
         if (multiOption) {
-          applyScoreMap(multiOption.scores || {}, raw, trace, question, multiOption);
+          applyScoreMap(multiOption.scores || {}, scoreState, question, multiOption);
         }
       });
+      if (question.id === INTEREST_GATE_QUESTION_ID) {
+        applyGateConfidence(question, values, scoreState);
+      }
       return;
     }
 
@@ -1204,11 +1294,11 @@
       var numberValue = Number(value) || 0;
       if (question.id === "trip_length") {
         if (numberValue >= 14) {
-          bumpScore(raw, trace, question, "explorer", 1.5, "trip_length");
-          bumpScore(raw, trace, question, "backpacker", 1, "trip_length");
+          bumpScore(scoreState, question, "explorer", 1.5, "trip_length", true);
+          bumpScore(scoreState, question, "backpacker", 1, "trip_length", true);
         }
         if (numberValue >= 21) {
-          bumpScore(raw, trace, question, "road_trip", 1, "trip_length");
+          bumpScore(scoreState, question, "road_trip", 1, "trip_length", true);
         }
       }
       return;
@@ -1220,34 +1310,67 @@
         return;
       }
       var direction = question.id === "avoid" ? -1 : 1;
-      applyKeywordScores(text, raw, trace, question, direction);
+      applyKeywordScores(text, scoreState, question, direction);
     }
     // Campos "text" (nombre, ciudad) no aportan señal de scoring.
   }
 
-  function applyScoreMap(scores, raw, trace, question, option) {
+  function applyScoreMap(scores, scoreState, question, option) {
     Object.keys(scores).forEach(function (archetypeId) {
       var amount = Number(scores[archetypeId]) || 0;
       if (amount <= 0) {
         return;
       }
-      bumpScore(raw, trace, question, archetypeId, amount, option.label);
+      bumpScore(scoreState, question, archetypeId, amount, option.label, true);
     });
   }
 
-  function bumpScore(raw, trace, question, archetypeId, amount, sourceLabel) {
-    raw[archetypeId] = (raw[archetypeId] || 0) + amount;
-    if (!trace[archetypeId]) {
-      trace[archetypeId] = [];
+  function bumpScore(scoreState, question, archetypeId, amount, sourceLabel, countsConfidence) {
+    scoreState.raw[archetypeId] = (scoreState.raw[archetypeId] || 0) + amount;
+    if (!scoreState.trace[archetypeId]) {
+      scoreState.trace[archetypeId] = [];
     }
-    trace[archetypeId].push({
+    scoreState.trace[archetypeId].push({
       question: question.label,
       source: sourceLabel,
       amount: amount
     });
+    if (countsConfidence !== false) {
+      bumpConfidence(scoreState, question, archetypeId, Math.abs(amount));
+    }
   }
 
-  function applyKeywordScores(text, raw, trace, question, direction) {
+  function bumpConfidence(scoreState, question, archetypeId, amount) {
+    if (amount <= 0) {
+      return;
+    }
+
+    scoreState.answeredPotential[archetypeId] = (scoreState.answeredPotential[archetypeId] || 0) + amount;
+    if (!scoreState.answeredQuestionMap[archetypeId]) {
+      scoreState.answeredQuestionMap[archetypeId] = {};
+    }
+    scoreState.answeredQuestionMap[archetypeId][question.id] = true;
+  }
+
+  function applyGateConfidence(question, selectedValues, scoreState) {
+    var selectedLookup = toLookup(selectedValues);
+    (question.options || []).forEach(function (option) {
+      if (selectedLookup[option.value]) {
+        return;
+      }
+
+      var scores = option.scores || {};
+      Object.keys(scores).forEach(function (archetypeId) {
+        var amount = Number(scores[archetypeId]) || 0;
+        if (amount <= 0) {
+          return;
+        }
+        bumpConfidence(scoreState, question, archetypeId, amount);
+      });
+    });
+  }
+
+  function applyKeywordScores(text, scoreState, question, direction) {
     var keywordMap = {
       explorer: ["explorar", "explore", "hidden", "gems", "aventura", "descubrir"],
       foodie: ["food", "comida", "restaurante", "chef", "tasting", "cocina"],
@@ -1298,7 +1421,7 @@
       });
       if (matched) {
         var amount = 1 * (direction || 1);
-        bumpScore(raw, trace, question, archetypeId, amount, direction === -1 ? "keyword-avoid" : "keyword");
+        bumpScore(scoreState, question, archetypeId, amount, direction === -1 ? "keyword-avoid" : "keyword", false);
       }
     });
   }
@@ -1328,10 +1451,11 @@
       });
   }
 
-  function buildSignals(answers, gating) {
+  function buildSignals(answers, gating, confidencePercent) {
     answers = answers || {};
     gating = gating || getInterestGateProfile();
     var signals = {};
+    signals.confidence = confidencePercent + "%";
     signals.purpose = labelFromValue("trip_purpose", answers.trip_purpose) || "No definido";
     signals.destination = labelFromValue("destination_style", answers.destination_style) || "No definido";
     signals.flexibility = labelFromValue("travel_window", answers.travel_window) || "No definida";
@@ -1378,11 +1502,12 @@
     }
   }
 
-  function buildNarrative(top, signals) {
+  function buildNarrative(top, signals, confidencePercent) {
     var topLine = top.length
       ? "Tus señales dominantes son " + top.slice(0, 3).map(function (item) { return item.label; }).join(", ") + "."
-      : "Aún no hay suficientes señales para una afinidad dominante.";
-    return [topLine, "Presupuesto: " + signals.budget + ".", "Ritmo: " + signals.pace + "."].join(" ");
+      : "Aún no hay suficiente evidencia para mostrar arquetipos.";
+    var confidenceLine = "Confidence del perfil: " + confidencePercent + "%.";
+    return [topLine, confidenceLine, "Presupuesto: " + signals.budget + ".", "Ritmo: " + signals.pace + "."].join(" ");
   }
 
   function labelFromValue(questionId, value) {
@@ -1492,9 +1617,13 @@
   function buildExportHtml(payload) {
     var topItems = payload.summary.archetypes
       .map(function (item) {
-        return "<li><strong>" + escapeHtml(item.label) + "</strong><span>" + escapeHtml(String(item.scorePercent)) + "%</span></li>";
+        return "<li><strong>" + escapeHtml(item.label) + "</strong><span>Afinidad " + escapeHtml(String(item.scorePercent)) + "% · Confidence " + escapeHtml(String(item.confidencePercent || 0)) + "%</span></li>";
       })
       .join("");
+
+    if (!topItems) {
+      topItems = "<li><strong>Sin arquetipos visibles</strong><span>" + escapeHtml(payload.summary.copy) + "</span></li>";
+    }
 
     var overviewItems = payload.summary.overview
       .map(function (item) {
@@ -1548,9 +1677,24 @@
     });
     lines.push("");
     lines.push("## Top archetypes");
-    payload.summary.archetypes.forEach(function (item) {
-      lines.push("- " + item.label + " (" + item.scorePercent + "%): " + (item.reasons.join("; ") || "sin razones detalladas"));
-    });
+    if (payload.summary.archetypes.length) {
+      payload.summary.archetypes.forEach(function (item) {
+        lines.push(
+          "- " +
+            item.label +
+            " (Afinidad " +
+            item.scorePercent +
+            "%, Confidence " +
+            (item.confidencePercent || 0) +
+            "%, " +
+            (item.answeredQuestions || 0) +
+            " preguntas): " +
+            (item.reasons.join("; ") || "sin razones detalladas")
+        );
+      });
+    } else {
+      lines.push("- Sin arquetipos visibles: " + payload.summary.copy);
+    }
     lines.push("");
     lines.push("## Intereses");
     lines.push("- Intereses elegidos: " + formatGateCategories(gating.selectedCategories, "Ninguna categoría seleccionada"));
@@ -1621,6 +1765,7 @@
     state = createDefaultState();
     currentSection = null;
     currentSummary = null;
+    interestGateWarningShown = false;
     dom.nameInput.value = "";
     renderWelcome();
     toast("Perfil reiniciado", "Listo para crear uno nuevo.");
