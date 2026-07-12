@@ -76,6 +76,7 @@
     dom.submitButton.addEventListener("click", submitSurvey);
     dom.editButton.addEventListener("click", function () {
       goToScreen("survey");
+      renderSection();
     });
     dom.restartButton.addEventListener("click", resetAll);
     dom.downloadJson.addEventListener("click", function () {
@@ -336,6 +337,15 @@
     });
 
     hydrateQuestionValues(currentSection);
+
+    window.scrollTo(0, 0);
+    if (typeof dom.sectionTitle.focus === "function") {
+      try {
+        dom.sectionTitle.focus({ preventScroll: true });
+      } catch (error) {
+        dom.sectionTitle.focus();
+      }
+    }
   }
 
   function renderQuestion(question) {
@@ -349,7 +359,7 @@
 
     title.textContent = question.label;
     help.textContent = question.help || "";
-    tag.textContent = question.type || "text";
+    tag.textContent = getQuestionTagLabel(question);
     node.dataset.questionId = question.id;
     node.dataset.questionType = question.type;
     node.dataset.required = question.required ? "true" : "false";
@@ -359,6 +369,38 @@
 
     body.appendChild(renderQuestionControl(question, node, error));
     return node;
+  }
+
+  function getQuestionTagLabel(question) {
+    if (question.type === "single") {
+      return "Elige una";
+    }
+
+    if (question.type === "multi") {
+      return "Puedes elegir varias";
+    }
+
+    if (!question.required) {
+      return "Opcional";
+    }
+
+    if (question.type === "date") {
+      return "Fecha";
+    }
+
+    if (question.type === "number") {
+      return "Número";
+    }
+
+    if (question.type === "textarea") {
+      return "Respuesta abierta";
+    }
+
+    if (question.type === "text") {
+      return "Texto corto";
+    }
+
+    return "Pregunta";
   }
 
   function renderQuestionControl(question, card, errorNode) {
@@ -657,6 +699,30 @@
     if (error) {
       error.textContent = message || "Revisa esta respuesta.";
     }
+    scrollQuestionIntoView(card);
+  }
+
+  function scrollQuestionIntoView(card) {
+    if (!card) {
+      return;
+    }
+
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    card.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start"
+    });
+
+    var focusTarget = card.querySelector(
+      "input:not([type='hidden']), textarea, button, select, [tabindex]:not([tabindex='-1'])"
+    );
+    if (focusTarget && typeof focusTarget.focus === "function") {
+      try {
+        focusTarget.focus({ preventScroll: true });
+      } catch (error) {
+        focusTarget.focus();
+      }
+    }
   }
 
   function clearQuestionError(card, errorNode) {
@@ -707,9 +773,6 @@
     if (screenName === "survey") {
       dom.screenSurvey.hidden = false;
       dom.screenSurvey.classList.add("active");
-      if (currentSection) {
-        renderSection();
-      }
     }
     if (screenName === "summary") {
       dom.screenSummary.hidden = false;
@@ -1145,7 +1208,7 @@
     saveDraft();
     goToScreen("thanks");
     renderThanks();
-    toast("Perfil listo", "Se generaron los exportes.");
+    toast("Perfil generado", "Se generaron los exportes.");
   }
 
   function renderThanks() {
