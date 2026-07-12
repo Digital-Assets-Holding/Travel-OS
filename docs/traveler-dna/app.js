@@ -182,9 +182,24 @@
     try {
       var draft = JSON.parse(raw);
       state = normalizeState(draft);
+      syncTravelerName();
     } catch (error) {
       console.warn("Invalid draft ignored", error);
       resetStorage();
+    }
+  }
+
+  function syncTravelerName() {
+    var nameFromHeader = normalizeText(state.name);
+    var nameFromAnswers = normalizeText(state.answers.traveler_name);
+
+    if (nameFromHeader && !nameFromAnswers) {
+      state.answers.traveler_name = nameFromHeader;
+      return;
+    }
+
+    if (!nameFromHeader && nameFromAnswers) {
+      state.name = nameFromAnswers;
     }
   }
 
@@ -247,7 +262,8 @@
       return;
     }
 
-    state.name = name;
+    setAnswer("traveler_name", name);
+    syncTravelerName();
     state.screen = "survey";
     state.sectionIndex = clamp(state.sectionIndex, 0, getSections().length - 1);
     saveDraft();
@@ -566,7 +582,10 @@
         if (!control) {
           return;
         }
-        if (question.type === "number") {
+        if (question.type === "single") {
+          var checked = card.querySelector('input[type="radio"]:checked');
+          state.answers[question.id] = normalizeAnswerValue((checked || control).value);
+        } else if (question.type === "number") {
           state.answers[question.id] = control.value === "" ? "" : Number(control.value);
         } else if (question.type === "range") {
           state.answers[question.id] = Number(control.value);
