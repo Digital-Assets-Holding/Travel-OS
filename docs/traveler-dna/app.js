@@ -1,13 +1,16 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "1.0.0";
+  var APP_VERSION = "1.1.0";
+  var INTEREST_GATE_SECTION_ID = "interest-gate";
+  var INTEREST_GATE_QUESTION_ID = "interest_gate";
   var STORAGE_KEY = "travel-os.traveler-dna.draft.v1";
   var FINAL_KEY = "travel-os.traveler-dna.final.v1";
 
   var state = {
     screen: "welcome",
     sectionIndex: 0,
+    currentSectionId: "",
     answers: {},
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -19,6 +22,10 @@
   var survey = null;
   var archetypeMap = {};
   var maxPotential = {};
+  var sectionMap = {};
+  var interestGateCatalog = [];
+  var interestGateOptionMap = {};
+  var interestGateSectionMap = {};
   var dom = {};
   var currentSection = null;
   var currentSummary = null;
@@ -133,16 +140,41 @@
 
   function buildIndex() {
     archetypeMap = {};
+    sectionMap = {};
+    interestGateCatalog = [];
+    interestGateOptionMap = {};
+    interestGateSectionMap = {};
+    maxPotential = {};
     (survey.archetypes || []).forEach(function (item) {
       archetypeMap[item.id] = item;
       maxPotential[item.id] = 0;
     });
 
     (survey.sections || []).forEach(function (section) {
+      sectionMap[section.id] = section;
       (section.questions || []).forEach(function (question) {
         collectQuestionPotential(question);
       });
     });
+
+    var interestGateQuestion = findQuestion(INTEREST_GATE_QUESTION_ID);
+    if (interestGateQuestion && Array.isArray(interestGateQuestion.options)) {
+      interestGateCatalog = interestGateQuestion.options.map(function (option) {
+        var entry = {
+          value: option.value,
+          label: option.label,
+          sectionIds: uniqueList(Array.isArray(option.sectionIds) ? option.sectionIds.slice() : [])
+        };
+        interestGateOptionMap[entry.value] = entry;
+        entry.sectionIds.forEach(function (sectionId) {
+          if (!interestGateSectionMap[sectionId]) {
+            interestGateSectionMap[sectionId] = [];
+          }
+          interestGateSectionMap[sectionId].push(entry);
+        });
+        return entry;
+      });
+    }
   }
 
   function collectQuestionPotential(question) {
@@ -165,6 +197,7 @@
     return {
       screen: "welcome",
       sectionIndex: 0,
+      currentSectionId: "",
       answers: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -213,6 +246,7 @@
     return {
       screen: candidate.screen || fallback.screen,
       sectionIndex: typeof candidate.sectionIndex === "number" ? candidate.sectionIndex : fallback.sectionIndex,
+      currentSectionId: candidate.currentSectionId || fallback.currentSectionId,
       answers: candidate.answers && typeof candidate.answers === "object" ? candidate.answers : {},
       createdAt: candidate.createdAt || fallback.createdAt,
       updatedAt: candidate.updatedAt || fallback.updatedAt,
@@ -266,7 +300,8 @@
     setAnswer("traveler_name", name);
     syncTravelerName();
     state.screen = "survey";
-    state.sectionIndex = clamp(state.sectionIndex, 0, getSections().length - 1);
+    state.sectionIndex = 0;
+    state.currentSectionId = "";
     saveDraft();
     goToScreen("survey");
     renderSection();
@@ -277,12 +312,15 @@
       return;
     }
 
-    if (state.sectionIndex <= 0) {
+    var sections = getVisibleSections();
+    var currentIndex = getVisibleSectionIndex(sections, currentSection.id);
+    if (currentIndex <= 0) {
       goToScreen("welcome");
       return;
     }
 
-    state.sectionIndex -= 1;
+    state.sectionIndex = currentIndex - 1;
+    state.currentSectionId = sections[state.sectionIndex].id;
     state.screen = "survey";
     saveDraft();
     renderSection();
@@ -301,8 +339,11 @@
 
     clearValidationMessage();
     persistSectionAnswers(currentSection);
-    if (state.sectionIndex < getSections().length - 1) {
-      state.sectionIndex += 1;
+    var sections = getVisibleSections();
+    var currentIndex = getVisibleSectionIndex(sections, currentSection.id);
+    if (currentIndex < sections.length - 1) {
+      state.sectionIndex = currentIndex + 1;
+      state.currentSectionId = sections[state.sectionIndex].id;
       state.screen = "survey";
       saveDraft();
       renderSection();
@@ -316,20 +357,24 @@
   }
 
   function renderSection() {
-    var sections = getSections();
-    currentSection = sections[state.sectionIndex] || sections[0];
+    var sections = getVisibleSections();
+    var resolved = resolveVisibleSection(sections);
+    currentSection = resolved.section;
     if (!currentSection) {
       return;
     }
 
+    state.sectionIndex = resolved.index;
+    state.currentSectionId = currentSection.id;
+
     dom.sectionKicker.textContent = currentSection.kicker || "Sección";
     dom.sectionTitle.textContent = currentSection.title || "";
     dom.sectionCopy.textContent = currentSection.summary || "";
-    dom.progressCount.textContent = (state.sectionIndex + 1) + " / " + sections.length;
-    dom.progressDetail.textContent = countAnsweredQuestions() + " preguntas completas";
-    dom.progressFill.style.width = ((state.sectionIndex) / Math.max(1, sections.length - 1)) * 100 + "%";
-    dom.backButton.disabled = state.sectionIndex === 0;
-    dom.nextButton.textContent = state.sectionIndex === sections.length - 1 ? "Resumen" : "Siguiente";
+    dom.progressCount.textContent = (resolved.index + 1) + " / " + sections.length;
+    dom.progressDetail.textContent = countAnsweredQuestions(sections) + " preguntas completas";
+    dom.progressFill.style.width = sections.length <= 1 ? "100%" : (resolved.index / Math.max(1, sections.length - 1)) * 100 + "%";
+    dom.backButton.disabled = resolved.index === 0;
+    dom.nextButton.textContent = resolved.index === sections.length - 1 ? "Resumen" : "Siguiente";
 
     dom.questionStack.innerHTML = "";
     (currentSection.questions || []).forEach(function (question) {
@@ -346,6 +391,8 @@
         dom.sectionTitle.focus();
       }
     }
+
+    saveDraft();
   }
 
   function renderQuestion(question) {
@@ -740,8 +787,8 @@
     // Intencionalmente vacío: el mensaje se comunica con el toast y el error por tarjeta.
   }
 
-  function countAnsweredQuestions() {
-    var sections = getSections();
+  function countAnsweredQuestions(sections) {
+    sections = sections || getVisibleSections();
     var count = 0;
     sections.forEach(function (section) {
       (section.questions || []).forEach(function (question) {
@@ -755,6 +802,197 @@
 
   function getSections() {
     return survey && survey.sections ? survey.sections : [];
+  }
+
+  function getVisibleSections() {
+    var sections = getSections();
+    var gateIndex = findSectionIndex(INTEREST_GATE_SECTION_ID, sections);
+    if (gateIndex === -1) {
+      return sections.slice();
+    }
+
+    var selectedLookup = toLookup(getSelectedInterestValues());
+    return sections.filter(function (section, index) {
+      if (index <= gateIndex) {
+        return true;
+      }
+
+      var mappedOptions = interestGateSectionMap[section.id];
+      if (!mappedOptions || !mappedOptions.length) {
+        return true;
+      }
+
+      return mappedOptions.some(function (option) {
+        return Boolean(selectedLookup[option.value]);
+      });
+    });
+  }
+
+  function getSelectedInterestValues() {
+    return uniqueList(
+      getMultiValues(INTEREST_GATE_QUESTION_ID)
+        .map(function (value) {
+          return normalizeText(value);
+        })
+        .filter(function (value) {
+          return Boolean(value);
+        })
+    );
+  }
+
+  function resolveVisibleSection(sections) {
+    if (!sections.length) {
+      return { section: null, index: 0 };
+    }
+
+    var resolvedIndex = getVisibleSectionIndex(sections, state.currentSectionId);
+    if (resolvedIndex === -1) {
+      resolvedIndex = clamp(state.sectionIndex, 0, sections.length - 1);
+    }
+
+    return {
+      section: sections[resolvedIndex] || sections[0],
+      index: resolvedIndex
+    };
+  }
+
+  function getVisibleSectionIndex(sections, sectionId) {
+    if (!sectionId) {
+      return -1;
+    }
+
+    for (var i = 0; i < sections.length; i += 1) {
+      if (sections[i].id === sectionId) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  function findSectionIndex(sectionId, sections) {
+    sections = sections || getSections();
+    for (var i = 0; i < sections.length; i += 1) {
+      if (sections[i].id === sectionId) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  function findSectionById(sectionId) {
+    return sectionMap[sectionId] || null;
+  }
+
+  function getInterestGateProfile(visibleSections) {
+    var selectedValues = getSelectedInterestValues();
+    var selectedLookup = toLookup(selectedValues);
+    var selectedCategories = [];
+    var rejectedCategories = [];
+    var selectedSectionIds = [];
+    var skippedSectionIds = [];
+
+    interestGateCatalog.forEach(function (option) {
+      var category = {
+        value: option.value,
+        label: option.label,
+        sectionIds: uniqueList(option.sectionIds || [])
+      };
+
+      if (selectedLookup[option.value]) {
+        selectedCategories.push(category);
+        category.sectionIds.forEach(function (sectionId) {
+          if (selectedSectionIds.indexOf(sectionId) === -1) {
+            selectedSectionIds.push(sectionId);
+          }
+        });
+      } else {
+        rejectedCategories.push(category);
+        category.sectionIds.forEach(function (sectionId) {
+          if (skippedSectionIds.indexOf(sectionId) === -1) {
+            skippedSectionIds.push(sectionId);
+          }
+        });
+      }
+    });
+
+    return {
+      sectionId: INTEREST_GATE_SECTION_ID,
+      questionId: INTEREST_GATE_QUESTION_ID,
+      selectedValues: selectedValues,
+      selectedCategories: selectedCategories,
+      rejectedCategories: rejectedCategories,
+      selectedSectionIds: selectedSectionIds,
+      skippedSectionIds: skippedSectionIds,
+      visibleSectionIds: (visibleSections || getVisibleSections()).map(function (section) {
+        return section.id;
+      })
+    };
+  }
+
+  function collectVisibleAnswers(sections) {
+    var visibleIds = {};
+    var collected = {};
+    (sections || getVisibleSections()).forEach(function (section) {
+      (section.questions || []).forEach(function (question) {
+        visibleIds[question.id] = true;
+      });
+    });
+
+    Object.keys(state.answers).forEach(function (key) {
+      if (visibleIds[key]) {
+        collected[key] = deepClone(state.answers[key]);
+      }
+    });
+
+    return collected;
+  }
+
+  function formatGateCategories(categories, emptyLabel) {
+    if (!Array.isArray(categories) || !categories.length) {
+      return emptyLabel || "Ninguna";
+    }
+
+    return categories
+      .map(function (category) {
+        return category.label;
+      })
+      .join(", ");
+  }
+
+  function formatSectionLabels(sectionIds, emptyLabel) {
+    if (!Array.isArray(sectionIds) || !sectionIds.length) {
+      return emptyLabel || "Ninguna";
+    }
+
+    return sectionIds
+      .map(function (sectionId) {
+        var section = findSectionById(sectionId);
+        return section ? (section.title || section.kicker || sectionId) : sectionId;
+      })
+      .join(", ");
+  }
+
+  function toLookup(values) {
+    var lookup = {};
+    (values || []).forEach(function (value) {
+      lookup[value] = true;
+    });
+    return lookup;
+  }
+
+  function uniqueList(values) {
+    var seen = {};
+    var result = [];
+    (values || []).forEach(function (value) {
+      var key = String(value);
+      if (seen[key]) {
+        return;
+      }
+      seen[key] = true;
+      result.push(value);
+    });
+    return result;
   }
 
   function goToScreen(screenName) {
@@ -862,15 +1100,21 @@
         { label: "Compañía", value: profile.signals.party },
         { label: "Accesibilidad", value: profile.signals.accessibility },
         { label: "Fotografía", value: profile.signals.photo },
-        { label: "Wellness", value: profile.signals.wellness }
+        { label: "Wellness", value: profile.signals.wellness },
+        { label: "Intereses elegidos", value: profile.signals.interestsSelected },
+        { label: "Intereses omitidos", value: profile.signals.interestsRejected }
       ],
+      gating: profile.gating,
       payload: profile
     };
     return summary;
   }
 
   function buildProfile() {
-    var scoring = scoreAnswers();
+    var visibleSections = getVisibleSections();
+    var gating = getInterestGateProfile(visibleSections);
+    var visibleAnswers = collectVisibleAnswers(visibleSections);
+    var scoring = scoreAnswers(visibleSections);
     var rawScores = scoring.raw;
     var trace = scoring.trace;
     var archetypes = (survey.archetypes || []).map(function (item) {
@@ -898,7 +1142,7 @@
       return item.score > 0;
     });
 
-    var signals = buildSignals();
+    var signals = buildSignals(visibleAnswers, gating);
     var narrative = buildNarrative(top, signals);
 
     return {
@@ -907,20 +1151,24 @@
       updatedAt: new Date().toISOString(),
       completedAt: state.completedAt,
       name: state.name,
-      answers: deepClone(state.answers),
+      answers: visibleAnswers,
       scores: rawScores,
       topArchetypes: top,
       allArchetypes: archetypes,
       signals: signals,
       narrative: narrative,
+      gating: gating,
+      visibleSectionIds: visibleSections.map(function (section) {
+        return section.id;
+      }),
       questionVersion: survey.version || APP_VERSION
     };
   }
 
-  function scoreAnswers() {
+  function scoreAnswers(sections) {
     var raw = {};
     var trace = {};
-    (survey.sections || []).forEach(function (section) {
+    (sections || getVisibleSections()).forEach(function (section) {
       (section.questions || []).forEach(function (question) {
         var value = state.answers[question.id];
         if (isEmpty(value)) {
@@ -1080,8 +1328,9 @@
       });
   }
 
-  function buildSignals() {
-    var answers = state.answers;
+  function buildSignals(answers, gating) {
+    answers = answers || {};
+    gating = gating || getInterestGateProfile();
     var signals = {};
     signals.purpose = labelFromValue("trip_purpose", answers.trip_purpose) || "No definido";
     signals.destination = labelFromValue("destination_style", answers.destination_style) || "No definido";
@@ -1093,6 +1342,8 @@
     signals.accessibility = formatSelections(answers.access_needs) || "Sin necesidades marcadas";
     signals.photo = formatSelections(answers.photo_preferences) || "Sin preferencia explícita";
     signals.wellness = formatSelections(answers.wellness_preferences) || "Sin preferencia explícita";
+    signals.interestsSelected = formatGateCategories(gating.selectedCategories, "Ninguna categoría seleccionada");
+    signals.interestsRejected = formatGateCategories(gating.rejectedCategories, "Sin omisiones");
     return signals;
   }
 
@@ -1232,7 +1483,8 @@
         copy: summary.copy,
         overview: summary.overview,
         archetypes: summary.payload.topArchetypes,
-        signals: summary.signals
+        signals: summary.signals,
+        gating: summary.gating
       }
     };
   }
@@ -1245,6 +1497,18 @@
       .join("");
 
     var overviewItems = payload.summary.overview
+      .map(function (item) {
+        return "<li><strong>" + escapeHtml(item.label) + "</strong><span>" + escapeHtml(item.value) + "</span></li>";
+      })
+      .join("");
+
+    var gating = payload.summary.gating || {};
+    var gatingItems = [
+      { label: "Intereses elegidos", value: formatGateCategories(gating.selectedCategories, "Ninguna categoría seleccionada") },
+      { label: "Intereses omitidos", value: formatGateCategories(gating.rejectedCategories, "Sin omisiones") },
+      { label: "Secciones visibles", value: formatSectionLabels(gating.visibleSectionIds, "Sin secciones visibles") },
+      { label: "Secciones omitidas", value: formatSectionLabels(gating.skippedSectionIds, "Sin secciones omitidas") }
+    ]
       .map(function (item) {
         return "<li><strong>" + escapeHtml(item.label) + "</strong><span>" + escapeHtml(item.value) + "</span></li>";
       })
@@ -1263,6 +1527,8 @@
       escapeHtml(payload.summary.copy) +
       "</p><h2>Resumen</h2><ul>" +
       overviewItems +
+      "</ul><h2>Intereses</h2><ul>" +
+      gatingItems +
       "</ul><h2>Top archetypes</h2><ul>" +
       topItems +
       "</ul></article></body></html>"
@@ -1270,6 +1536,7 @@
   }
 
   function buildExportMarkdown(payload) {
+    var gating = payload.summary.gating || {};
     var lines = [];
     lines.push("# " + payload.summary.title);
     lines.push("");
@@ -1284,6 +1551,12 @@
     payload.summary.archetypes.forEach(function (item) {
       lines.push("- " + item.label + " (" + item.scorePercent + "%): " + (item.reasons.join("; ") || "sin razones detalladas"));
     });
+    lines.push("");
+    lines.push("## Intereses");
+    lines.push("- Intereses elegidos: " + formatGateCategories(gating.selectedCategories, "Ninguna categoría seleccionada"));
+    lines.push("- Intereses omitidos: " + formatGateCategories(gating.rejectedCategories, "Sin omisiones"));
+    lines.push("- Secciones visibles: " + formatSectionLabels(gating.visibleSectionIds, "Sin secciones visibles"));
+    lines.push("- Secciones omitidas: " + formatSectionLabels(gating.skippedSectionIds, "Sin secciones omitidas"));
     lines.push("");
     lines.push("## Señales");
     payload.summary.signals.forEach(function (item) {
