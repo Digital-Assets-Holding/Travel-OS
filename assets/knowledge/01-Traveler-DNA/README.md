@@ -18,6 +18,14 @@ Esta carpeta documenta el contrato local del MVP de Traveler DNA dentro de Trave
 - El resultado final queda guardado en `travel-os.traveler-dna.final.v1`.
 - El usuario puede cerrar el navegador y retomar después.
 
+## Taxonomía
+
+La consolidación futura de arquetipos vive en:
+
+- `assets/knowledge/01-Traveler-DNA/C2-Archetype-Consolidation.md`
+
+Ese documento define la capa intermedia para calibrar sobre cores sin tocar la UI del MVP.
+
 ## Contrato de exportación
 
 El resumen final debe poder materializarse en tres formatos sin tocar la UI:
