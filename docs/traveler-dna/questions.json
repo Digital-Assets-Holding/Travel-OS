@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "title": "Traveler DNA",
   "description": "Formulario estático para perfilar hábitos, misión de viaje y afinidades.",
   "archetypes": [
@@ -622,6 +622,96 @@
                 "motorsport": 2,
                 "adventure": 1,
                 "road_trip": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "interest-gate",
+      "kicker": "Interest Gate",
+      "title": "Interest Gate",
+      "summary": "Marca lo que sí te mueve. Lo demás se omite del flujo y queda como rechazo explícito.",
+      "questions": [
+        {
+          "id": "interest_gate",
+          "label": "¿Cuáles de estas te mueven?",
+          "help": "Selecciona solo las categorías que sí quieres ver. Lo no marcado se omite del flujo.",
+          "type": "multi",
+          "required": false,
+          "minSelections": 0,
+          "options": [
+            {
+              "value": "food",
+              "label": "Food",
+              "sectionIds": ["food-dna"],
+              "scores": {
+                "foodie": 3,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "shopping",
+              "label": "Shopping",
+              "sectionIds": ["shopping-dna"],
+              "scores": {
+                "shopper": 3,
+                "shopping": 1
+              }
+            },
+            {
+              "value": "adventure",
+              "label": "Adventure",
+              "sectionIds": ["adventure-dna"],
+              "scores": {
+                "adventure": 3,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "luxury",
+              "label": "Luxury",
+              "sectionIds": ["luxury-dna"],
+              "scores": {
+                "luxury": 3,
+                "spa": 1
+              }
+            },
+            {
+              "value": "outdoor",
+              "label": "Outdoor",
+              "sectionIds": ["outdoor-dna"],
+              "scores": {
+                "outdoor": 3,
+                "camping": 1
+              }
+            },
+            {
+              "value": "sports",
+              "label": "Sports",
+              "sectionIds": ["sports-dna"],
+              "scores": {
+                "sports_fan": 3,
+                "motorsport": 1
+              }
+            },
+            {
+              "value": "photo",
+              "label": "Photo",
+              "sectionIds": ["photography-dna"],
+              "scores": {
+                "photographer": 3,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "wellness",
+              "label": "Wellness",
+              "sectionIds": ["wellness-dna"],
+              "scores": {
+                "wellness": 3,
+                "spa": 1
               }
             }
           ]
