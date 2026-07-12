@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f5f1ea" />
+    <meta
+      name="description"
+      content="Traveler DNA: MVP funcional de Travel OS con autofill, scoring de afinidades y exportación."
+    />
+    <title>Travel OS · Traveler DNA</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="app-header">
+        <a class="app-brand" href="../" aria-label="Volver a la portada de Travel OS">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <strong>Travel OS</strong>
+            <small>Traveler DNA</small>
+          </span>
+        </a>
+        <div class="header-actions">
+          <button id="theme-status" class="chip chip-static" type="button" disabled>Modo automático</button>
+        </div>
+      </header>
+
+      <main class="app-main">
+        <section id="resume-banner" class="resume-banner" hidden>
+          <div>
+            <strong>Hay un borrador guardado.</strong>
+            <p id="resume-banner-copy">Puedes continuar donde lo dejaste.</p>
+          </div>
+          <div class="banner-actions">
+            <button id="resume-button" class="button button-primary" type="button">Reanudar</button>
+            <button id="discard-button" class="button button-secondary" type="button">Empezar nuevo</button>
+          </div>
+        </section>
+
+        <section id="screen-welcome" class="screen active" aria-labelledby="welcome-title">
+          <div class="hero-card">
+            <p class="eyebrow">MVP funcional</p>
+            <h1 id="welcome-title">Construye tu Traveler DNA en menos de 5 minutos.</h1>
+            <p class="lead">
+              Guarda el progreso automáticamente, resume preferencias clave y genera un perfil listo para compartir.
+            </p>
+
+            <div class="hero-metrics" aria-label="Beneficios rápidos">
+              <article class="metric">
+                <strong>Autosave</strong>
+                <span>Persistencia en localStorage</span>
+              </article>
+              <article class="metric">
+                <strong>Safari iPhone</strong>
+                <span>Touch first, sin dependencias</span>
+              </article>
+              <article class="metric">
+                <strong>Exports</strong>
+                <span>JSON, HTML y Markdown</span>
+              </article>
+            </div>
+
+            <div class="card">
+              <label class="field-label" for="traveler-name">Nombre</label>
+              <input
+                id="traveler-name"
+                class="text-input"
+                type="text"
+                autocomplete="name"
+                inputmode="text"
+                placeholder="Como quieres que te llamemos"
+                maxlength="80"
+              />
+              <p class="field-help">Puedes cambiarlo más tarde. El perfil sigue guardándose aunque cierres el navegador.</p>
+            </div>
+
+            <div class="actions">
+              <button id="start-button" class="button button-primary" type="button">Comenzar</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-survey" class="screen" hidden>
+          <div class="progress-wrap">
+            <div class="progress-head">
+              <div>
+                <p id="section-kicker" class="eyebrow">Sección</p>
+                <h2 id="section-title">Información básica</h2>
+                <p id="section-copy" class="muted"></p>
+              </div>
+              <div class="progress-meta">
+                <span id="progress-count">1 / 1</span>
+                <span id="progress-detail">0 preguntas completas</span>
+              </div>
+            </div>
+            <div class="progress-bar" aria-hidden="true">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <form id="survey-form" class="survey-card" novalidate>
+            <div id="question-stack" class="question-stack"></div>
+            <div class="nav-row">
+              <button id="back-button" class="button button-secondary" type="button">Atrás</button>
+              <button id="next-button" class="button button-primary" type="button">Siguiente</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="screen-summary" class="screen" hidden>
+          <div class="summary-card">
+            <div class="summary-head">
+              <div>
+                <p class="eyebrow">Resumen</p>
+                <h2 id="summary-title">Tu Traveler DNA está listo.</h2>
+                <p id="summary-copy" class="muted"></p>
+              </div>
+              <div class="summary-actions">
+                <button id="edit-button" class="button button-secondary" type="button">Editar respuestas</button>
+                <button id="submit-button" class="button button-primary" type="button">Enviar</button>
+              </div>
+            </div>
+
+            <div id="summary-overview" class="summary-overview"></div>
+            <div id="summary-archetypes" class="result-grid"></div>
+            <div id="summary-signals" class="signal-grid"></div>
+            <details class="raw-details">
+              <summary>Ver respuestas crudas</summary>
+              <pre id="raw-json"></pre>
+            </details>
+          </div>
+        </section>
+
+        <section id="screen-thanks" class="screen" hidden>
+          <div class="thanks-card">
+            <p class="eyebrow">Gracias</p>
+            <h2>Perfil guardado y exportes listos.</h2>
+            <p id="thanks-copy" class="muted"></p>
+
+            <div class="export-grid">
+              <button id="download-json" class="button button-primary" type="button">Descargar traveler-dna.json</button>
+              <button id="download-html" class="button button-secondary" type="button">Descargar traveler-summary.html</button>
+              <button id="download-md" class="button button-secondary" type="button">Descargar traveler-summary.md</button>
+            </div>
+
+            <div class="actions">
+              <button id="restart-button" class="button button-ghost" type="button">Crear otro perfil</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="question-template">
+      <article class="question-card">
+        <div class="question-head">
+          <div>
+            <h3 class="question-title"></h3>
+            <p class="question-help muted"></p>
+          </div>
+          <span class="question-tag"></span>
+        </div>
+        <div class="question-body"></div>
+        <p class="question-error" aria-live="polite"></p>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

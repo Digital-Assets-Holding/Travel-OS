@@ -1,0 +1,1696 @@
+{
+  "version": "1.0.0",
+  "title": "Traveler DNA",
+  "description": "Formulario estático para perfilar hábitos, misión de viaje y afinidades.",
+  "archetypes": [
+    { "id": "explorer", "label": "Explorer" },
+    { "id": "foodie", "label": "Foodie" },
+    { "id": "shopper", "label": "Shopper" },
+    { "id": "luxury", "label": "Luxury" },
+    { "id": "backpacker", "label": "Backpacker" },
+    { "id": "business", "label": "Business" },
+    { "id": "culture", "label": "Culture" },
+    { "id": "history", "label": "History" },
+    { "id": "adventure", "label": "Adventure" },
+    { "id": "extreme_sports", "label": "Extreme Sports" },
+    { "id": "outdoor", "label": "Outdoor" },
+    { "id": "camping", "label": "Camping" },
+    { "id": "rv", "label": "RV" },
+    { "id": "road_trip", "label": "Road Trip" },
+    { "id": "photographer", "label": "Photographer" },
+    { "id": "motorsport", "label": "Motorsport" },
+    { "id": "sports_fan", "label": "Sports Fan" },
+    { "id": "music", "label": "Music" },
+    { "id": "concerts", "label": "Concerts" },
+    { "id": "nightlife", "label": "Nightlife" },
+    { "id": "wellness", "label": "Wellness" },
+    { "id": "spa", "label": "Spa" },
+    { "id": "family", "label": "Family" },
+    { "id": "kids", "label": "Kids" },
+    { "id": "theme_parks", "label": "Theme Parks" },
+    { "id": "gaming", "label": "Gaming" },
+    { "id": "anime", "label": "Anime" },
+    { "id": "technology", "label": "Technology" },
+    { "id": "luxury_vintage", "label": "Luxury Vintage" },
+    { "id": "dark_tourism", "label": "Dark Tourism" },
+    { "id": "urban_exploration", "label": "Urban Exploration" },
+    { "id": "astronomy", "label": "Astronomy" },
+    { "id": "safari", "label": "Safari" },
+    { "id": "diving", "label": "Diving" },
+    { "id": "ski", "label": "Ski" },
+    { "id": "cruise", "label": "Cruise" },
+    { "id": "volunteering", "label": "Volunteering" },
+    { "id": "pilgrimage", "label": "Pilgrimage" },
+    { "id": "festivals", "label": "Festivals" },
+    { "id": "shopping", "label": "Shopping" },
+    { "id": "art", "label": "Art" },
+    { "id": "architecture", "label": "Architecture" },
+    { "id": "local_experiences", "label": "Local Experiences" },
+    { "id": "hidden_gems", "label": "Hidden Gems" }
+  ],
+  "sections": [
+    {
+      "id": "basic-info",
+      "kicker": "Información básica",
+      "title": "Información básica",
+      "summary": "Primero ubicamos el contexto mínimo para personalizar el perfil.",
+      "questions": [
+        {
+          "id": "traveler_name",
+          "label": "Nombre",
+          "help": "Como quieres que aparezca en el resumen.",
+          "type": "text",
+          "required": true,
+          "placeholder": "Tu nombre"
+        },
+        {
+          "id": "home_city",
+          "label": "Ciudad de salida",
+          "help": "Opcional, pero ayuda a ajustar traslados y clima.",
+          "type": "text",
+          "required": false,
+          "placeholder": "Querétaro, Ciudad de México, etc."
+        },
+        {
+          "id": "party_size",
+          "label": "¿Viajas principalmente con…?",
+          "help": "Esto cambia mucho el tipo de experiencia que conviene.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "solo",
+              "label": "Solo",
+              "scores": {
+                "backpacker": 3,
+                "explorer": 2,
+                "photographer": 1,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "couple",
+              "label": "Pareja",
+              "scores": {
+                "luxury": 2,
+                "spa": 1,
+                "cruise": 1,
+                "foodie": 1
+              }
+            },
+            {
+              "value": "friends",
+              "label": "Amigos",
+              "scores": {
+                "nightlife": 2,
+                "festivals": 2,
+                "adventure": 1,
+                "road_trip": 1
+              }
+            },
+            {
+              "value": "family",
+              "label": "Familia",
+              "scores": {
+                "family": 5,
+                "kids": 4,
+                "theme_parks": 3,
+                "cruise": 1
+              }
+            },
+            {
+              "value": "business",
+              "label": "Equipo / negocio",
+              "scores": {
+                "business": 5,
+                "technology": 1,
+                "architecture": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "travel-mission",
+      "kicker": "Travel Mission",
+      "title": "Travel Mission",
+      "summary": "Qué estás buscando, cuándo y con qué nivel de flexibilidad.",
+      "questions": [
+        {
+          "id": "trip_purpose",
+          "label": "Propósito del viaje",
+          "help": "Ayuda a separar leisure, business y ocasiones especiales.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "leisure",
+              "label": "Descanso / placer",
+              "scores": {
+                "wellness": 1,
+                "spa": 1,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "business",
+              "label": "Negocios",
+              "scores": {
+                "business": 6,
+                "technology": 2,
+                "architecture": 1
+              }
+            },
+            {
+              "value": "bleisure",
+              "label": "Negocios + placer",
+              "scores": {
+                "business": 4,
+                "foodie": 1,
+                "luxury": 1,
+                "culture": 1
+              }
+            },
+            {
+              "value": "event",
+              "label": "Evento / concierto / festival",
+              "scores": {
+                "concerts": 3,
+                "music": 3,
+                "festivals": 4,
+                "nightlife": 1
+              }
+            },
+            {
+              "value": "family_event",
+              "label": "Reunión familiar",
+              "scores": {
+                "family": 4,
+                "kids": 3,
+                "shopping": 1
+              }
+            },
+            {
+              "value": "celebration",
+              "label": "Celebración / lujo",
+              "scores": {
+                "luxury": 4,
+                "spa": 2,
+                "cruise": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "destination_style",
+          "label": "Tipo de destino que más te atrae",
+          "help": "Puedes elegir el que mejor representa el viaje ideal.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "city",
+              "label": "Ciudad",
+              "scores": {
+                "culture": 2,
+                "architecture": 2,
+                "shopping": 1,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "heritage",
+              "label": "Patrimonio / historia",
+              "scores": {
+                "history": 4,
+                "culture": 2,
+                "art": 1
+              }
+            },
+            {
+              "value": "nature",
+              "label": "Naturaleza",
+              "scores": {
+                "outdoor": 4,
+                "explorer": 2,
+                "astronomy": 1
+              }
+            },
+            {
+              "value": "luxury",
+              "label": "Lujo",
+              "scores": {
+                "luxury": 5,
+                "spa": 2,
+                "luxury_vintage": 1
+              }
+            },
+            {
+              "value": "business_hub",
+              "label": "Hub de negocios",
+              "scores": {
+                "business": 5,
+                "technology": 2,
+                "architecture": 1
+              }
+            },
+            {
+              "value": "theme_parks",
+              "label": "Parques temáticos",
+              "scores": {
+                "theme_parks": 5,
+                "kids": 3,
+                "family": 3
+              }
+            },
+            {
+              "value": "safari",
+              "label": "Safari / wildlife",
+              "scores": {
+                "safari": 6,
+                "outdoor": 2,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "ski",
+              "label": "Montaña / nieve",
+              "scores": {
+                "ski": 6,
+                "adventure": 2,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "diving",
+              "label": "Mar / diving",
+              "scores": {
+                "diving": 6,
+                "adventure": 2,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "cruise",
+              "label": "Crucero",
+              "scores": {
+                "cruise": 6,
+                "luxury": 2,
+                "spa": 1
+              }
+            },
+            {
+              "value": "pilgrimage",
+              "label": "Pilgrimage / espiritual",
+              "scores": {
+                "pilgrimage": 6,
+                "culture": 1,
+                "wellness": 1
+              }
+            },
+            {
+              "value": "road_trip",
+              "label": "Road trip",
+              "scores": {
+                "road_trip": 6,
+                "explorer": 2,
+                "camping": 1
+              }
+            },
+            {
+              "value": "nightlife_city",
+              "label": "Ciudad nocturna",
+              "scores": {
+                "nightlife": 5,
+                "music": 2,
+                "concerts": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "travel_window",
+          "label": "¿Qué tan definidas están las fechas?",
+          "help": "Elige el nivel de flexibilidad real.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "fixed",
+              "label": "Fechas fijas",
+              "scores": {
+                "business": 2,
+                "family": 1
+              }
+            },
+            {
+              "value": "somewhat_flexible",
+              "label": "Algo flexibles",
+              "scores": {
+                "explorer": 1,
+                "road_trip": 1
+              }
+            },
+            {
+              "value": "flexible",
+              "label": "Flexibles",
+              "scores": {
+                "backpacker": 2,
+                "explorer": 2
+              }
+            },
+            {
+              "value": "open",
+              "label": "Abiertas",
+              "scores": {
+                "backpacker": 3,
+                "explorer": 2,
+                "road_trip": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "travel_start_date",
+          "label": "Fecha de inicio",
+          "help": "Opcional. Si aún no la sabes, déjala vacía.",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "travel_end_date",
+          "label": "Fecha de regreso",
+          "help": "Opcional. Puedes completarla más tarde.",
+          "type": "date",
+          "required": false
+        },
+        {
+          "id": "trip_length",
+          "label": "Duración estimada (noches)",
+          "help": "Aproximación suficiente para personalizar el ritmo.",
+          "type": "number",
+          "required": false,
+          "min": 1,
+          "max": 60,
+          "step": 1,
+          "placeholder": "Ej. 7"
+        },
+        {
+          "id": "budget_band",
+          "label": "Presupuesto por día",
+          "help": "No hace falta exactitud absoluta. Solo una banda útil.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "bootstrap",
+              "label": "Muy ajustado",
+              "scores": {
+                "backpacker": 5,
+                "explorer": 2,
+                "camping": 1
+              }
+            },
+            {
+              "value": "value",
+              "label": "Valor inteligente",
+              "scores": {
+                "backpacker": 2,
+                "local_experiences": 2,
+                "foodie": 1
+              }
+            },
+            {
+              "value": "balanced",
+              "label": "Balanceado",
+              "scores": {
+                "explorer": 2,
+                "culture": 2,
+                "shopping": 1
+              }
+            },
+            {
+              "value": "premium",
+              "label": "Premium",
+              "scores": {
+                "luxury": 4,
+                "spa": 1,
+                "business": 1
+              }
+            },
+            {
+              "value": "luxury",
+              "label": "Lujo alto",
+              "scores": {
+                "luxury": 6,
+                "luxury_vintage": 1,
+                "cruise": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "traveler-dna",
+      "kicker": "Traveler DNA",
+      "title": "Traveler DNA",
+      "summary": "Cómo te gusta moverte, planear y vivir cada viaje.",
+      "questions": [
+        {
+          "id": "planning_style",
+          "label": "Estilo de planeación",
+          "help": "Esto define cuánto control conviene poner antes de viajar.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "spontaneous",
+              "label": "Espontáneo",
+              "scores": {
+                "backpacker": 3,
+                "explorer": 2,
+                "hidden_gems": 1
+              }
+            },
+            {
+              "value": "balanced",
+              "label": "Balanceado",
+              "scores": {
+                "culture": 1,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "detailed",
+              "label": "Muy detallado",
+              "scores": {
+                "business": 2,
+                "technology": 1,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "concierge",
+              "label": "Con concierge / asistido",
+              "scores": {
+                "luxury": 4,
+                "spa": 2,
+                "business": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "pace",
+          "label": "Ritmo ideal",
+          "help": "Tu viaje puede ser más contemplativo o más intenso.",
+          "type": "single",
+          "required": true,
+          "options": [
+            {
+              "value": "slow",
+              "label": "Lento e inmersivo",
+              "scores": {
+                "culture": 2,
+                "history": 2,
+                "wellness": 1
+              }
+            },
+            {
+              "value": "balanced",
+              "label": "Balanceado",
+              "scores": {
+                "explorer": 1,
+                "foodie": 1
+              }
+            },
+            {
+              "value": "packed",
+              "label": "Muy activo",
+              "scores": {
+                "adventure": 2,
+                "sports_fan": 1,
+                "photographer": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "transport_style",
+          "label": "Medios que más te gustan",
+          "help": "Selecciona todos los que sí usarías felizmente.",
+          "type": "multi",
+          "minSelections": 1,
+          "required": true,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "walk",
+              "label": "Caminar",
+              "scores": {
+                "local_experiences": 1,
+                "urban_exploration": 1,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "transit",
+              "label": "Transporte público",
+              "scores": {
+                "backpacker": 2,
+                "culture": 1,
+                "business": 1
+              }
+            },
+            {
+              "value": "car",
+              "label": "Auto / rental",
+              "scores": {
+                "road_trip": 4,
+                "explorer": 1,
+                "camping": 1
+              }
+            },
+            {
+              "value": "train",
+              "label": "Tren",
+              "scores": {
+                "culture": 1,
+                "business": 1,
+                "luxury": 1
+              }
+            },
+            {
+              "value": "plane",
+              "label": "Avión",
+              "scores": {
+                "business": 2,
+                "luxury": 1
+              }
+            },
+            {
+              "value": "ferry",
+              "label": "Ferry / barco",
+              "scores": {
+                "cruise": 2,
+                "diving": 1
+              }
+            },
+            {
+              "value": "bike",
+              "label": "Bicicleta",
+              "scores": {
+                "outdoor": 1,
+                "adventure": 1
+              }
+            },
+            {
+              "value": "rv",
+              "label": "RV / van",
+              "scores": {
+                "rv": 4,
+                "road_trip": 3,
+                "camping": 2
+              }
+            },
+            {
+              "value": "motorbike",
+              "label": "Moto",
+              "scores": {
+                "motorsport": 2,
+                "adventure": 1,
+                "road_trip": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "travel-archetypes",
+      "kicker": "Travel Archetypes",
+      "title": "Travel Archetypes",
+      "summary": "Selecciona las afinidades que realmente te describen.",
+      "questions": [
+        {
+          "id": "core_vibes",
+          "label": "Vibras principales",
+          "help": "Selecciona todo lo que sientas propio.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "explorer",
+              "label": "Explorer",
+              "scores": {
+                "explorer": 6,
+                "hidden_gems": 2,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "backpacker",
+              "label": "Backpacker",
+              "scores": {
+                "backpacker": 6,
+                "explorer": 2,
+                "road_trip": 1
+              }
+            },
+            {
+              "value": "business",
+              "label": "Business",
+              "scores": {
+                "business": 6,
+                "technology": 1,
+                "architecture": 1
+              }
+            },
+            {
+              "value": "culture",
+              "label": "Culture",
+              "scores": {
+                "culture": 6,
+                "art": 2,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "history",
+              "label": "History",
+              "scores": {
+                "history": 6,
+                "dark_tourism": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "local_experiences",
+              "label": "Local Experiences",
+              "scores": {
+                "local_experiences": 6,
+                "hidden_gems": 2,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "hidden_gems",
+              "label": "Hidden Gems",
+              "scores": {
+                "hidden_gems": 6,
+                "explorer": 2,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "urban_exploration",
+              "label": "Urban Exploration",
+              "scores": {
+                "urban_exploration": 6,
+                "architecture": 2,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "dark_tourism",
+              "label": "Dark Tourism",
+              "scores": {
+                "dark_tourism": 6,
+                "history": 2,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "pilgrimage",
+              "label": "Pilgrimage",
+              "scores": {
+                "pilgrimage": 6,
+                "culture": 1,
+                "wellness": 1
+              }
+            },
+            {
+              "value": "volunteering",
+              "label": "Volunteering",
+              "scores": {
+                "volunteering": 6,
+                "culture": 1,
+                "family": 1
+              }
+            },
+            {
+              "value": "astronomy",
+              "label": "Astronomy",
+              "scores": {
+                "astronomy": 6,
+                "outdoor": 2,
+                "camping": 1
+              }
+            },
+            {
+              "value": "family",
+              "label": "Family",
+              "scores": {
+                "family": 6,
+                "kids": 4,
+                "theme_parks": 2
+              }
+            },
+            {
+              "value": "kids",
+              "label": "Kids",
+              "scores": {
+                "kids": 6,
+                "family": 4,
+                "theme_parks": 2
+              }
+            },
+            {
+              "value": "theme_parks",
+              "label": "Theme Parks",
+              "scores": {
+                "theme_parks": 6,
+                "kids": 3,
+                "family": 2
+              }
+            },
+            {
+              "value": "gaming",
+              "label": "Gaming",
+              "scores": {
+                "gaming": 6,
+                "technology": 2,
+                "anime": 1
+              }
+            },
+            {
+              "value": "anime",
+              "label": "Anime",
+              "scores": {
+                "anime": 6,
+                "gaming": 2,
+                "technology": 1
+              }
+            },
+            {
+              "value": "technology",
+              "label": "Technology",
+              "scores": {
+                "technology": 6,
+                "business": 2,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "music",
+              "label": "Music",
+              "scores": {
+                "music": 6,
+                "concerts": 2,
+                "nightlife": 1
+              }
+            },
+            {
+              "value": "concerts",
+              "label": "Concerts",
+              "scores": {
+                "concerts": 6,
+                "music": 2,
+                "festivals": 1
+              }
+            },
+            {
+              "value": "nightlife",
+              "label": "Nightlife",
+              "scores": {
+                "nightlife": 6,
+                "music": 2,
+                "concerts": 1
+              }
+            },
+            {
+              "value": "festivals",
+              "label": "Festivals",
+              "scores": {
+                "festivals": 6,
+                "music": 2,
+                "culture": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": "scene_vibes",
+          "label": "Escenas y formatos",
+          "help": "Elige más señales de estilo y contexto.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "foodie",
+              "label": "Foodie",
+              "scores": {
+                "foodie": 6,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "shopper",
+              "label": "Shopper",
+              "scores": {
+                "shopper": 6,
+                "shopping": 2,
+                "luxury": 1
+              }
+            },
+            {
+              "value": "shopping",
+              "label": "Shopping",
+              "scores": {
+                "shopping": 6,
+                "shopper": 2,
+                "luxury_vintage": 1
+              }
+            },
+            {
+              "value": "luxury",
+              "label": "Luxury",
+              "scores": {
+                "luxury": 6,
+                "spa": 2,
+                "cruise": 1
+              }
+            },
+            {
+              "value": "luxury_vintage",
+              "label": "Luxury Vintage",
+              "scores": {
+                "luxury_vintage": 6,
+                "shopping": 1,
+                "art": 1
+              }
+            },
+            {
+              "value": "art",
+              "label": "Art",
+              "scores": {
+                "art": 6,
+                "culture": 2,
+                "architecture": 1
+              }
+            },
+            {
+              "value": "architecture",
+              "label": "Architecture",
+              "scores": {
+                "architecture": 6,
+                "urban_exploration": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "wellness",
+              "label": "Wellness",
+              "scores": {
+                "wellness": 6,
+                "spa": 2
+              }
+            },
+            {
+              "value": "spa",
+              "label": "Spa",
+              "scores": {
+                "spa": 6,
+                "wellness": 2,
+                "luxury": 1
+              }
+            },
+            {
+              "value": "cruise",
+              "label": "Cruise",
+              "scores": {
+                "cruise": 6,
+                "luxury": 1,
+                "spa": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "food-dna",
+      "kicker": "Food DNA",
+      "title": "Food DNA",
+      "summary": "Ajustamos el viaje a tu relación con comida, bebida y mercado local.",
+      "questions": [
+        {
+          "id": "food_preferences",
+          "label": "Lo que más te mueve el apetito",
+          "help": "Marca todo lo que sí te entusiasma de verdad.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "street_food",
+              "label": "Street food",
+              "scores": {
+                "foodie": 4,
+                "local_experiences": 2,
+                "backpacker": 1
+              }
+            },
+            {
+              "value": "fine_dining",
+              "label": "Fine dining",
+              "scores": {
+                "luxury": 4,
+                "foodie": 2,
+                "business": 1
+              }
+            },
+            {
+              "value": "tasting_menu",
+              "label": "Tasting menu",
+              "scores": {
+                "foodie": 4,
+                "luxury": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "local_market",
+              "label": "Mercados locales",
+              "scores": {
+                "local_experiences": 4,
+                "foodie": 2,
+                "shopping": 1
+              }
+            },
+            {
+              "value": "vegetarian",
+              "label": "Vegetariano / plant-based",
+              "scores": {
+                "wellness": 2,
+                "foodie": 2
+              }
+            },
+            {
+              "value": "coffee",
+              "label": "Café de especialidad",
+              "scores": {
+                "foodie": 2,
+                "business": 1,
+                "culture": 1
+              }
+            },
+            {
+              "value": "cocktails",
+              "label": "Cocktails",
+              "scores": {
+                "nightlife": 3,
+                "luxury": 1,
+                "music": 1
+              }
+            },
+            {
+              "value": "night_snacks",
+              "label": "Comer de noche",
+              "scores": {
+                "nightlife": 2,
+                "foodie": 2,
+                "concerts": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shopping-dna",
+      "kicker": "Shopping DNA",
+      "title": "Shopping DNA",
+      "summary": "Afinamos el perfil de compra para lujo, vintage, mercados o tech.",
+      "questions": [
+        {
+          "id": "shopping_preferences",
+          "label": "Qué tipo de compras sí harías",
+          "help": "Si no compras casi nada, también cuenta.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "designer",
+              "label": "Designer / lujo",
+              "scores": {
+                "shopper": 3,
+                "luxury": 3,
+                "shopping": 1
+              }
+            },
+            {
+              "value": "vintage",
+              "label": "Vintage",
+              "scores": {
+                "luxury_vintage": 5,
+                "shopping": 2,
+                "art": 1
+              }
+            },
+            {
+              "value": "local_crafts",
+              "label": "Artesanías locales",
+              "scores": {
+                "shopping": 2,
+                "local_experiences": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "street_markets",
+              "label": "Mercados / bazares",
+              "scores": {
+                "shopping": 3,
+                "explorer": 1,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "tech_gadgets",
+              "label": "Tech / gadgets",
+              "scores": {
+                "technology": 4,
+                "shopping": 1,
+                "business": 1
+              }
+            },
+            {
+              "value": "art_objects",
+              "label": "Obras / objetos de arte",
+              "scores": {
+                "art": 4,
+                "shopping": 1,
+                "culture": 1
+              }
+            },
+            {
+              "value": "books_collectibles",
+              "label": "Libros / coleccionables",
+              "scores": {
+                "history": 1,
+                "culture": 1,
+                "shopping": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adventure-dna",
+      "kicker": "Adventure DNA",
+      "title": "Adventure DNA",
+      "summary": "Mide cuánta adrenalina o exploración activa quieres en el viaje.",
+      "questions": [
+        {
+          "id": "adventure_preferences",
+          "label": "Actividades que sí te entusiasman",
+          "help": "Marca una o varias. Solo cuentan las que realmente harías.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "hiking",
+              "label": "Hiking",
+              "scores": {
+                "adventure": 3,
+                "outdoor": 3,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "climbing",
+              "label": "Climbing",
+              "scores": {
+                "extreme_sports": 4,
+                "adventure": 2,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "zipline",
+              "label": "Zipline",
+              "scores": {
+                "adventure": 3,
+                "extreme_sports": 2
+              }
+            },
+            {
+              "value": "surfing",
+              "label": "Surfing",
+              "scores": {
+                "adventure": 2,
+                "outdoor": 2,
+                "diving": 1
+              }
+            },
+            {
+              "value": "diving",
+              "label": "Diving",
+              "scores": {
+                "diving": 5,
+                "adventure": 2,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "skydiving",
+              "label": "Skydiving",
+              "scores": {
+                "extreme_sports": 5,
+                "adventure": 3
+              }
+            },
+            {
+              "value": "motorsports",
+              "label": "Motorsports",
+              "scores": {
+                "motorsport": 5,
+                "sports_fan": 1,
+                "adventure": 1
+              }
+            },
+            {
+              "value": "rafting",
+              "label": "Rafting",
+              "scores": {
+                "adventure": 4,
+                "outdoor": 2
+              }
+            },
+            {
+              "value": "canyoning",
+              "label": "Canyoning",
+              "scores": {
+                "extreme_sports": 4,
+                "adventure": 2
+              }
+            },
+            {
+              "value": "trail_running",
+              "label": "Trail running",
+              "scores": {
+                "outdoor": 2,
+                "adventure": 1,
+                "sports_fan": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "luxury-dna",
+      "kicker": "Luxury DNA",
+      "title": "Luxury DNA",
+      "summary": "Cuánto peso le das al confort, la personalización y los detalles premium.",
+      "questions": [
+        {
+          "id": "luxury_preferences",
+          "label": "Qué sí hace que un viaje se sienta premium",
+          "help": "Selecciona todo lo que realmente valoras.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "boutique_hotels",
+              "label": "Boutique hotels",
+              "scores": {
+                "luxury": 4,
+                "culture": 1
+              }
+            },
+            {
+              "value": "private_transfers",
+              "label": "Private transfers",
+              "scores": {
+                "luxury": 4,
+                "business": 1
+              }
+            },
+            {
+              "value": "spa",
+              "label": "Spa",
+              "scores": {
+                "spa": 5,
+                "wellness": 3,
+                "luxury": 2
+              }
+            },
+            {
+              "value": "concierge",
+              "label": "Concierge",
+              "scores": {
+                "luxury": 4,
+                "business": 1
+              }
+            },
+            {
+              "value": "fine_wine",
+              "label": "Fine wine / tasting",
+              "scores": {
+                "luxury": 2,
+                "foodie": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "premium_seating",
+              "label": "Premium seating / upgrades",
+              "scores": {
+                "luxury": 3,
+                "concerts": 1,
+                "sports_fan": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outdoor-dna",
+      "kicker": "Outdoor DNA",
+      "title": "Outdoor DNA",
+      "summary": "Qué tan fuerte es tu conexión con aire libre, campamento y road trips.",
+      "questions": [
+        {
+          "id": "outdoor_preferences",
+          "label": "Formatos outdoor que sí te animan",
+          "help": "Selecciona todo lo que sí encaja contigo.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "camping",
+              "label": "Camping",
+              "scores": {
+                "camping": 6,
+                "outdoor": 2,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "rv",
+              "label": "RV",
+              "scores": {
+                "rv": 6,
+                "road_trip": 3,
+                "camping": 1
+              }
+            },
+            {
+              "value": "road_trip",
+              "label": "Road trip",
+              "scores": {
+                "road_trip": 6,
+                "explorer": 2,
+                "camping": 1
+              }
+            },
+            {
+              "value": "wildlife",
+              "label": "Wildlife",
+              "scores": {
+                "safari": 3,
+                "outdoor": 2,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "stargazing",
+              "label": "Stargazing",
+              "scores": {
+                "astronomy": 5,
+                "camping": 2,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "desert",
+              "label": "Desierto",
+              "scores": {
+                "outdoor": 2,
+                "explorer": 1,
+                "photographer": 1
+              }
+            },
+            {
+              "value": "national_parks",
+              "label": "National parks",
+              "scores": {
+                "outdoor": 4,
+                "explorer": 2,
+                "camping": 1
+              }
+            },
+            {
+              "value": "lakes_rivers",
+              "label": "Lagos / ríos",
+              "scores": {
+                "outdoor": 3,
+                "adventure": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sports-dna",
+      "kicker": "Sports DNA",
+      "title": "Sports DNA",
+      "summary": "Cuánto pesan los eventos deportivos, la adrenalina y los rituales de fan.",
+      "questions": [
+        {
+          "id": "sports_preferences",
+          "label": "Qué sí te interesa dentro del deporte",
+          "help": "Puedes elegir consumo de espectador, estadios o acción.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "sports_fan",
+              "label": "Sports fan",
+              "scores": {
+                "sports_fan": 6
+              }
+            },
+            {
+              "value": "stadiums",
+              "label": "Stadiums",
+              "scores": {
+                "sports_fan": 3,
+                "business": 1,
+                "culture": 1
+              }
+            },
+            {
+              "value": "live_matches",
+              "label": "Live matches",
+              "scores": {
+                "sports_fan": 4,
+                "festivals": 1
+              }
+            },
+            {
+              "value": "motorsport",
+              "label": "Motorsport",
+              "scores": {
+                "motorsport": 6,
+                "sports_fan": 2,
+                "adventure": 1
+              }
+            },
+            {
+              "value": "fan_travel",
+              "label": "Fan travel",
+              "scores": {
+                "sports_fan": 4,
+                "road_trip": 1,
+                "business": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "photography-dna",
+      "kicker": "Photography DNA",
+      "title": "Photography DNA",
+      "summary": "Cómo quieres capturar el viaje, si es que quieres capturarlo.",
+      "questions": [
+        {
+          "id": "photo_preferences",
+          "label": "Estilo fotográfico que sí te importa",
+          "help": "Selecciona las escenas que buscarías de forma intencional.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "street",
+              "label": "Street",
+              "scores": {
+                "photographer": 4,
+                "urban_exploration": 2,
+                "culture": 1
+              }
+            },
+            {
+              "value": "architecture",
+              "label": "Architecture",
+              "scores": {
+                "photographer": 4,
+                "architecture": 3,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "landscapes",
+              "label": "Landscapes",
+              "scores": {
+                "photographer": 4,
+                "outdoor": 3,
+                "explorer": 1
+              }
+            },
+            {
+              "value": "portraits",
+              "label": "Portraits",
+              "scores": {
+                "photographer": 3,
+                "local_experiences": 1
+              }
+            },
+            {
+              "value": "night",
+              "label": "Night / long exposure",
+              "scores": {
+                "photographer": 3,
+                "nightlife": 2,
+                "urban_exploration": 1
+              }
+            },
+            {
+              "value": "drone",
+              "label": "Drone",
+              "scores": {
+                "photographer": 4,
+                "outdoor": 1
+              }
+            },
+            {
+              "value": "film",
+              "label": "Film",
+              "scores": {
+                "photographer": 3,
+                "luxury_vintage": 2,
+                "art": 1
+              }
+            },
+            {
+              "value": "editing",
+              "label": "Editing / post",
+              "scores": {
+                "photographer": 2,
+                "technology": 2,
+                "art": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wellness-dna",
+      "kicker": "Wellness DNA",
+      "title": "Wellness DNA",
+      "summary": "Qué tanto el descanso, la recuperación y el reset forman parte del viaje.",
+      "questions": [
+        {
+          "id": "wellness_preferences",
+          "label": "Prácticas wellness que sí quieres en un viaje",
+          "help": "Marca lo que te haría sentir mejor, no lo que suena bien.",
+          "type": "multi",
+          "required": true,
+          "minSelections": 1,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "yoga",
+              "label": "Yoga",
+              "scores": {
+                "wellness": 4,
+                "spa": 1
+              }
+            },
+            {
+              "value": "retreat",
+              "label": "Retreat",
+              "scores": {
+                "wellness": 4,
+                "spa": 2,
+                "pilgrimage": 1
+              }
+            },
+            {
+              "value": "sleep",
+              "label": "Sleep focus",
+              "scores": {
+                "wellness": 4,
+                "luxury": 1
+              }
+            },
+            {
+              "value": "recovery",
+              "label": "Recovery",
+              "scores": {
+                "wellness": 4,
+                "spa": 2
+              }
+            },
+            {
+              "value": "thermal_baths",
+              "label": "Thermal baths",
+              "scores": {
+                "spa": 4,
+                "wellness": 2
+              }
+            },
+            {
+              "value": "meditation",
+              "label": "Meditation",
+              "scores": {
+                "wellness": 4,
+                "pilgrimage": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accessibility",
+      "kicker": "Accessibility",
+      "title": "Accessibility",
+      "summary": "Ajustes prácticos para que el viaje sea realmente viable y cómodo.",
+      "questions": [
+        {
+          "id": "access_needs",
+          "label": "Necesidades o preferencias de accesibilidad",
+          "help": "Selecciona todo lo que aplique, aunque sea ocasionalmente.",
+          "type": "multi",
+          "required": false,
+          "layout": "columns-3",
+          "options": [
+            {
+              "value": "step_free",
+              "label": "Step-free",
+              "scores": {}
+            },
+            {
+              "value": "elevator",
+              "label": "Elevator",
+              "scores": {}
+            },
+            {
+              "value": "quiet_rooms",
+              "label": "Quiet rooms",
+              "scores": {}
+            },
+            {
+              "value": "low_sensory",
+              "label": "Low sensory",
+              "scores": {}
+            },
+            {
+              "value": "dietary_support",
+              "label": "Dietary support",
+              "scores": {}
+            },
+            {
+              "value": "rest_breaks",
+              "label": "Rest breaks",
+              "scores": {}
+            },
+            {
+              "value": "accessible_transport",
+              "label": "Accessible transport",
+              "scores": {}
+            },
+            {
+              "value": "companion_support",
+              "label": "Companion support",
+              "scores": {}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "open-questions",
+      "kicker": "Preguntas abiertas",
+      "title": "Preguntas abiertas",
+      "summary": "Aquí capturamos matices que no caben en un selector.",
+      "questions": [
+        {
+          "id": "must_do",
+          "label": "Imprescindibles",
+          "help": "¿Qué no puede faltar en tu viaje ideal?",
+          "type": "textarea",
+          "required": false,
+          "rows": 4,
+          "placeholder": "Museos, mercados, conciertos, amaneceres, etc."
+        },
+        {
+          "id": "avoid",
+          "label": "Evita",
+          "help": "¿Qué prefieres no repetir?",
+          "type": "textarea",
+          "required": false,
+          "rows": 4,
+          "placeholder": "Traslados largos, multitudes, madrugadas, etc."
+        },
+        {
+          "id": "notes",
+          "label": "Notas libres",
+          "help": "Cualquier detalle útil para afinar la recomendación.",
+          "type": "textarea",
+          "required": false,
+          "rows": 5,
+          "placeholder": "Ej. viajo con un niño, busco comida local auténtica..."
+        }
+      ]
+    }
+  ]
+}
