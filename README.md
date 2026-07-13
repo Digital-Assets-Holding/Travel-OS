@@ -66,8 +66,15 @@ El paquete de fase 0 está congelado aquí:
 
 ## Superficie pública
 
+- Sitio público: `https://digital-assets-holding.github.io/Travel-OS/`
 - [Portada del sitio](docs/index.html)
 - [Traveler DNA](docs/traveler-dna/index.html)
+
+## Consumo externo
+
+- Este repo es la casa canónica de Traveler DNA.
+- El dash debe consumirlo como enlace externo, no alojarlo como módulo compartido.
+- Si se embebe desde otro producto, debe ser una decisión explícita y no un acoplamiento implícito.
 
 ## Principios
 
