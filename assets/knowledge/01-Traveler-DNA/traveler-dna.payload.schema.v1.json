@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./traveler-dna.payload.schema.v1.json",
+  "title": "Traveler DNA export payload v1",
+  "description": "Contrato congelado del export de Traveler DNA. Mantiene compatibilidad hacia atrás dentro de v1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["app", "module", "version", "generatedAt", "profile", "summary"],
+  "properties": {
+    "app": {
+      "const": "Travel OS"
+    },
+    "module": {
+      "const": "Traveler DNA"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^1\\.\\d+\\.\\d+$",
+      "description": "Semver del contrato de exportación. Los cambios incompatibles deben salir como v2."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profile": {
+      "$ref": "#/$defs/profile"
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    }
+  },
+  "$defs": {
+    "answerValue": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "answerMap": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/answerValue"
+      }
+    },
+    "scoreMap": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "labelValueItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "value"],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "interestGateCategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "label", "sectionIds"],
+      "properties": {
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "sectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "archetypeItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "score",
+        "scorePercent",
+        "affinityPercent",
+        "confidencePercent",
+        "confidenceLabel",
+        "answeredPotential",
+        "answeredQuestions",
+        "reasons"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "scorePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Alias de compatibilidad de affinityPercent."
+        },
+        "affinityPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "confidencePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "confidenceLabel": {
+          "type": "string"
+        },
+        "answeredPotential": {
+          "type": "number"
+        },
+        "answeredQuestions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sectionId",
+        "questionId",
+        "selectedValues",
+        "selectedCategories",
+        "rejectedCategories",
+        "selectedSectionIds",
+        "skippedSectionIds",
+        "visibleSectionIds"
+      ],
+      "properties": {
+        "sectionId": {
+          "type": "string"
+        },
+        "questionId": {
+          "type": "string"
+        },
+        "selectedValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectedCategories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/interestGateCategory"
+          }
+        },
+        "rejectedCategories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/interestGateCategory"
+          }
+        },
+        "selectedSectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "skippedSectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "visibleSectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "signalsObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "confidence",
+        "purpose",
+        "destination",
+        "flexibility",
+        "dates",
+        "budget",
+        "party",
+        "pace",
+        "accessibility",
+        "photo",
+        "wellness",
+        "interestsSelected",
+        "interestsRejected"
+      ],
+      "properties": {
+        "confidence": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "flexibility": {
+          "type": "string"
+        },
+        "dates": {
+          "type": "string"
+        },
+        "budget": {
+          "type": "string"
+        },
+        "party": {
+          "type": "string"
+        },
+        "pace": {
+          "type": "string"
+        },
+        "accessibility": {
+          "type": "string"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "wellness": {
+          "type": "string"
+        },
+        "interestsSelected": {
+          "type": "string"
+        },
+        "interestsRejected": {
+          "type": "string"
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "createdAt",
+        "updatedAt",
+        "completedAt",
+        "name",
+        "answers",
+        "scores",
+        "confidence",
+        "confidencePercent",
+        "confidenceLabel",
+        "topArchetypes",
+        "allArchetypes",
+        "signals",
+        "narrative",
+        "gating",
+        "visibleSectionIds",
+        "questionVersion"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^1\\.\\d+\\.\\d+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "answers": {
+          "$ref": "#/$defs/answerMap"
+        },
+        "scores": {
+          "$ref": "#/$defs/scoreMap"
+        },
+        "confidence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "confidencePercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "confidenceLabel": {
+          "type": "string"
+        },
+        "topArchetypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archetypeItem"
+          }
+        },
+        "allArchetypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archetypeItem"
+          }
+        },
+        "signals": {
+          "$ref": "#/$defs/signalsObject"
+        },
+        "narrative": {
+          "type": "string"
+        },
+        "gating": {
+          "$ref": "#/$defs/gating"
+        },
+        "visibleSectionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "questionVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "copy", "overview", "archetypes", "signals", "gating"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "copy": {
+          "type": "string"
+        },
+        "overview": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/labelValueItem"
+          }
+        },
+        "archetypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/archetypeItem"
+          }
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/labelValueItem"
+          }
+        },
+        "gating": {
+          "$ref": "#/$defs/gating"
+        }
+      }
+    }
+  }
+}

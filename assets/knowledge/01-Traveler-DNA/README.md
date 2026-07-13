@@ -26,6 +26,16 @@ La consolidación futura de arquetipos vive en:
 
 Ese documento define la capa intermedia para calibrar sobre cores sin tocar la UI del MVP.
 
+## Fase 0
+
+El paquete base de arquitectura del dominio vive aquí:
+
+- `assets/knowledge/01-Traveler-DNA/ADR-002-Dominio-y-Entidades.md`
+- `assets/knowledge/01-Traveler-DNA/traveler-dna.payload.schema.v1.json`
+- `assets/knowledge/01-Traveler-DNA/Nomenclatura-y-Estructura-del-repo.md`
+
+Ese paquete congela el dominio, el contrato de exportación y la nomenclatura del repositorio antes de abrir capas nuevas.
+
 ## Contrato de exportación
 
 El resumen final debe poder materializarse en tres formatos sin tocar la UI:
