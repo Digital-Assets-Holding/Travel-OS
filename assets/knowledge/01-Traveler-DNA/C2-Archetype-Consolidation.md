@@ -32,7 +32,7 @@ El objetivo no es borrar señal, sino concentrarla para que la calibración de p
 ### 3. Shopper
 
 - Primary id: `shopper`
-- Secondary tags: `shopping`, `luxury_vintage`
+- Secondary tags: `shopping` alias, `luxury_vintage`
 - Uso: retail, moda, boutiques, vintage, compras como motivo de viaje.
 
 ### 4. Luxury
@@ -113,7 +113,7 @@ Los 44 arquetipos quedan cubiertos por la tabla anterior sin perder señal:
 
 - Descubrimiento y autenticidad: `explorer`, `urban_exploration`, `hidden_gems`, `local_experiences`, `dark_tourism`
 - Gastronomía: `foodie`
-- Retail: `shopper`, `shopping`, `luxury_vintage`
+- Retail: `shopper`, `luxury_vintage`
 - Premium: `luxury`, `cruise`
 - Presupuesto y largo recorrido: `backpacker`, `volunteering`
 - Trabajo y eficiencia: `business`, `technology`

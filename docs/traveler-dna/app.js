@@ -1408,7 +1408,7 @@
     var keywordMap = {
       explorer: ["explorar", "explore", "hidden", "gems", "aventura", "descubrir"],
       foodie: ["food", "comida", "restaurante", "chef", "tasting", "cocina"],
-      shopper: ["shopper", "shopping", "compras", "boutique", "mall"],
+      shopper: ["shopper", "shopping", "compras", "boutique", "mall", "bazaar"],
       luxury: ["lujo", "luxury", "premium", "vip", "concierge"],
       backpacker: ["mochilero", "backpacker", "hostel", "budget", "low cost"],
       business: ["negocio", "business", "meeting", "reunión", "congreso"],
@@ -1441,7 +1441,6 @@
       volunteering: ["volunteer", "voluntariado"],
       pilgrimage: ["pilgrimage", "peregrinación"],
       festivals: ["festival", "festivals", "fiesta"],
-      shopping: ["shopping", "compras", "bazaar"],
       art: ["art", "arte", "gallery", "galería"],
       architecture: ["architecture", "arquitectura", "building"],
       local_experiences: ["local", "locales", "authentic", "auténtico"],

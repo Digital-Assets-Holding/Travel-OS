@@ -42,7 +42,6 @@
     { "id": "volunteering", "label": "Volunteering" },
     { "id": "pilgrimage", "label": "Pilgrimage" },
     { "id": "festivals", "label": "Festivals" },
-    { "id": "shopping", "label": "Shopping" },
     { "id": "art", "label": "Art" },
     { "id": "architecture", "label": "Architecture" },
     { "id": "local_experiences", "label": "Local Experiences" },
@@ -188,7 +187,7 @@
               "scores": {
                 "family": 4,
                 "kids": 3,
-                "shopping": 1
+                "shopper": 1
               }
             },
             {
@@ -215,7 +214,7 @@
               "scores": {
                 "culture": 2,
                 "architecture": 2,
-                "shopping": 1,
+                "shopper": 1,
                 "urban_exploration": 1
               }
             },
@@ -427,7 +426,7 @@
               "scores": {
                 "explorer": 2,
                 "culture": 2,
-                "shopping": 1
+                "shopper": 1
               }
             },
             {
@@ -653,11 +652,10 @@
             },
             {
               "value": "shopping",
-              "label": "Shopping",
+              "label": "Shopper",
               "sectionIds": ["shopping-dna"],
               "scores": {
-                "shopper": 3,
-                "shopping": 1
+                "shopper": 4
               }
             },
             {
@@ -954,18 +952,8 @@
               "value": "shopper",
               "label": "Shopper",
               "scores": {
-                "shopper": 6,
-                "shopping": 2,
+                "shopper": 8,
                 "luxury": 1
-              }
-            },
-            {
-              "value": "shopping",
-              "label": "Shopping",
-              "scores": {
-                "shopping": 6,
-                "shopper": 2,
-                "luxury_vintage": 1
               }
             },
             {
@@ -982,7 +970,7 @@
               "label": "Luxury Vintage",
               "scores": {
                 "luxury_vintage": 6,
-                "shopping": 1,
+                "shopper": 1,
                 "art": 1
               }
             },
@@ -1082,7 +1070,7 @@
               "scores": {
                 "local_experiences": 4,
                 "foodie": 2,
-                "shopping": 1
+                "shopper": 1
               }
             },
             {
@@ -1126,8 +1114,8 @@
     },
     {
       "id": "shopping-dna",
-      "kicker": "Shopping DNA",
-      "title": "Shopping DNA",
+      "kicker": "Shopper DNA",
+      "title": "Shopper DNA",
       "summary": "Afinamos el perfil de compra para lujo, vintage, mercados o tech.",
       "questions": [
         {
@@ -1143,9 +1131,8 @@
               "value": "designer",
               "label": "Designer / lujo",
               "scores": {
-                "shopper": 3,
-                "luxury": 3,
-                "shopping": 1
+                "shopper": 4,
+                "luxury": 3
               }
             },
             {
@@ -1153,7 +1140,7 @@
               "label": "Vintage",
               "scores": {
                 "luxury_vintage": 5,
-                "shopping": 2,
+                "shopper": 2,
                 "art": 1
               }
             },
@@ -1161,7 +1148,7 @@
               "value": "local_crafts",
               "label": "Artesanías locales",
               "scores": {
-                "shopping": 2,
+                "shopper": 2,
                 "local_experiences": 2,
                 "culture": 1
               }
@@ -1170,7 +1157,7 @@
               "value": "street_markets",
               "label": "Mercados / bazares",
               "scores": {
-                "shopping": 3,
+                "shopper": 3,
                 "explorer": 1,
                 "local_experiences": 1
               }
@@ -1180,7 +1167,7 @@
               "label": "Tech / gadgets",
               "scores": {
                 "technology": 4,
-                "shopping": 1,
+                "shopper": 1,
                 "business": 1
               }
             },
@@ -1189,7 +1176,7 @@
               "label": "Obras / objetos de arte",
               "scores": {
                 "art": 4,
-                "shopping": 1,
+                "shopper": 1,
                 "culture": 1
               }
             },
@@ -1199,7 +1186,7 @@
               "scores": {
                 "history": 1,
                 "culture": 1,
-                "shopping": 2
+                "shopper": 2
               }
             }
           ]
