@@ -3,6 +3,7 @@
 ## Propósito
 
 Esta carpeta documenta el contrato local del MVP de Traveler DNA dentro de Travel OS.
+La portada fundacional del sistema vive en `README.md` en la raíz del repo.
 
 ## Superficie pública
 
