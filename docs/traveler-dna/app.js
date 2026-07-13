@@ -1,13 +1,25 @@
 (function () {
   "use strict";
 
-  var APP_VERSION = "1.2.0";
+  var APP_VERSION = "1.2.1";
   var INTEREST_GATE_SECTION_ID = "interest-gate";
   var INTEREST_GATE_QUESTION_ID = "interest_gate";
   var STORAGE_KEY = "travel-os.traveler-dna.draft.v1";
   var FINAL_KEY = "travel-os.traveler-dna.final.v1";
   var interestGateWarningShown = false;
   var pendingQuestionFocusId = "";
+  var needsStorageRewrite = false;
+  var validators = window.TravelerDNAValidation || {
+    validateSurveyDefinition: function () {
+      return { valid: true, errors: [], message: "" };
+    },
+    validateExportPayload: function () {
+      return { valid: true, errors: [], message: "" };
+    },
+    sanitizeExportPayload: function (payload) {
+      return payload;
+    }
+  };
 
   var state = {
     screen: "welcome",
@@ -73,7 +85,6 @@
     dom.summaryOverview = document.getElementById("summary-overview");
     dom.summaryArchetypes = document.getElementById("summary-archetypes");
     dom.summarySignals = document.getElementById("summary-signals");
-    dom.rawJson = document.getElementById("raw-json");
     dom.thanksCopy = document.getElementById("thanks-copy");
   }
 
@@ -128,11 +139,19 @@
         return response.json();
       })
       .then(function (payload) {
+        var validation = validators.validateSurveyDefinition(payload);
+        if (!validation.valid) {
+          throw new Error("questions.json inválido: " + (validation.message || "falló la validación"));
+        }
         survey = payload;
         buildIndex();
         ready = true;
         hydrateScreenFromState();
         updateResumeBanner();
+        if (needsStorageRewrite) {
+          saveDraft();
+          needsStorageRewrite = false;
+        }
       })
       .catch(function (error) {
         console.error(error);
@@ -154,7 +173,7 @@
     (survey.sections || []).forEach(function (section) {
       sectionMap[section.id] = section;
       (section.questions || []).forEach(function (question) {
-        collectQuestionPotential(question);
+        collectQuestionPotential(question, maxPotential);
       });
     });
 
@@ -177,7 +196,8 @@
     }
   }
 
-  function collectQuestionPotential(question) {
+  function collectQuestionPotential(question, targetMap) {
+    targetMap = targetMap || maxPotential;
     if (!question.options || !question.options.length) {
       return;
     }
@@ -187,10 +207,20 @@
       Object.keys(scores).forEach(function (archetypeId) {
         var value = Number(scores[archetypeId]) || 0;
         if (value > 0) {
-          maxPotential[archetypeId] = (maxPotential[archetypeId] || 0) + value;
+          targetMap[archetypeId] = (targetMap[archetypeId] || 0) + value;
         }
       });
     });
+  }
+
+  function collectPotentialForSections(sections) {
+    var potential = {};
+    (sections || []).forEach(function (section) {
+      (section.questions || []).forEach(function (question) {
+        collectQuestionPotential(question, potential);
+      });
+    });
+    return potential;
   }
 
   function createDefaultState() {
@@ -209,7 +239,16 @@
 
   function restoreDraft() {
     var raw = localStorage.getItem(STORAGE_KEY);
+    var finalPayload = readStoredExportPayload(FINAL_KEY);
     if (!raw) {
+      if (finalPayload) {
+        state = createDefaultState();
+        state.screen = "thanks";
+        state.exportPayload = finalPayload;
+        state.completedAt = finalPayload.profile && finalPayload.profile.completedAt ? finalPayload.profile.completedAt : state.completedAt;
+        state.updatedAt = finalPayload.generatedAt || state.updatedAt;
+        needsStorageRewrite = true;
+      }
       return;
     }
 
@@ -217,9 +256,24 @@
       var draft = JSON.parse(raw);
       state = normalizeState(draft);
       syncTravelerName();
+      needsStorageRewrite = true;
+      if (state.screen === "thanks" && finalPayload) {
+        state.exportPayload = finalPayload;
+      }
     } catch (error) {
       console.warn("Invalid draft ignored", error);
-      resetStorage();
+      localStorage.removeItem(STORAGE_KEY);
+      if (finalPayload) {
+        state = createDefaultState();
+        state.screen = "thanks";
+        state.exportPayload = finalPayload;
+        state.completedAt = finalPayload.profile && finalPayload.profile.completedAt ? finalPayload.profile.completedAt : state.completedAt;
+        state.updatedAt = finalPayload.generatedAt || state.updatedAt;
+        needsStorageRewrite = true;
+      } else {
+        localStorage.removeItem(FINAL_KEY);
+        needsStorageRewrite = false;
+      }
     }
   }
 
@@ -252,8 +306,46 @@
       updatedAt: candidate.updatedAt || fallback.updatedAt,
       completedAt: candidate.completedAt || null,
       name: candidate.name || "",
-      exportPayload: candidate.exportPayload || null
+      exportPayload: normalizeStoredExportPayload(candidate.exportPayload || null)
     };
+  }
+
+  function normalizeStoredExportPayload(payload) {
+    if (!payload) {
+      return null;
+    }
+
+    try {
+      var sanitized = validators.sanitizeExportPayload(payload);
+      var validation = validators.validateExportPayload(sanitized);
+      if (!validation.valid) {
+        console.warn("Invalid stored export ignored", validation.errors || validation.message);
+        return null;
+      }
+      return sanitized;
+    } catch (error) {
+      console.warn("Stored export ignored", error);
+      return null;
+    }
+  }
+
+  function readStoredExportPayload(key) {
+    var raw = localStorage.getItem(key);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      var payload = normalizeStoredExportPayload(JSON.parse(raw));
+      if (!payload) {
+        localStorage.removeItem(key);
+      }
+      return payload;
+    } catch (error) {
+      console.warn("Invalid final export ignored", error);
+      localStorage.removeItem(key);
+      return null;
+    }
   }
 
   function hydrateScreenFromState() {
@@ -716,10 +808,41 @@
       var valid = true;
       var message = "";
 
-      if (question.type === "text" || question.type === "textarea" || question.type === "single" || question.type === "number" || question.type === "date") {
+      if (question.type === "text" || question.type === "textarea" || question.type === "single") {
         if (question.required && isEmpty(value)) {
           valid = false;
           message = "Completa esta respuesta para continuar.";
+        }
+      }
+
+      if (question.type === "number") {
+        if (question.required && isEmpty(value)) {
+          valid = false;
+          message = "Completa esta respuesta para continuar.";
+        } else if (!isEmpty(value)) {
+          var numericValue = Number(value);
+          if (!isFinite(numericValue)) {
+            valid = false;
+            message = "Ingresa un número válido.";
+          } else {
+            if (typeof question.min !== "undefined" && numericValue < question.min) {
+              valid = false;
+              message = "El valor mínimo es " + question.min + ".";
+            } else if (typeof question.max !== "undefined" && numericValue > question.max) {
+              valid = false;
+              message = "El valor máximo es " + question.max + ".";
+            }
+          }
+        }
+      }
+
+      if (question.type === "date") {
+        if (question.required && isEmpty(value)) {
+          valid = false;
+          message = "Completa esta respuesta para continuar.";
+        } else if (!isEmpty(value) && !isValidDateValue(String(value))) {
+          valid = false;
+          message = "Ingresa una fecha válida.";
         }
       }
 
@@ -744,7 +867,10 @@
     var hasStart = questions.some(function (q) {
       return q.id === "travel_start_date";
     });
-    if (hasStart && !isEmpty(start) && !isEmpty(end) && end < start) {
+    var hasEnd = questions.some(function (q) {
+      return q.id === "travel_end_date";
+    });
+    if (hasStart && hasEnd && isValidDateValue(String(start || "")) && isValidDateValue(String(end || "")) && String(end) < String(start)) {
       var dateMessage = "La fecha de regreso no puede ser anterior a la de inicio.";
       highlightQuestionError("travel_end_date", dateMessage);
       return { valid: false, message: dateMessage };
@@ -1078,7 +1204,6 @@
     dom.summaryOverview.innerHTML = "";
     dom.summaryArchetypes.innerHTML = "";
     dom.summarySignals.innerHTML = "";
-    dom.rawJson.textContent = JSON.stringify(currentSummary.payload, null, 2);
 
     currentSummary.overview.forEach(function (item) {
       dom.summaryOverview.appendChild(renderOverviewCard(item));
@@ -1214,9 +1339,10 @@
     var trace = scoring.trace;
     var answeredPotential = scoring.answeredPotential;
     var answeredQuestionMap = scoring.answeredQuestionMap;
+    var visiblePotential = collectPotentialForSections(visibleSections);
     var archetypes = (survey.archetypes || []).map(function (item) {
       var score = rawScores[item.id] || 0;
-      var potential = Math.max(1, maxPotential[item.id] || 1);
+      var potential = Math.max(1, visiblePotential[item.id] || 1);
       var confidencePotential = answeredPotential[item.id] || 0;
       var affinityPercent = confidencePotential > 0 ? Math.max(0, Math.min(100, Math.round((score / confidencePotential) * 100))) : 0;
       var confidencePercent = Math.min(100, Math.round((confidencePotential / potential) * 100));
@@ -1609,10 +1735,14 @@
     }
 
     state.completedAt = new Date().toISOString();
+    var exportPayload = getValidatedExportPayload();
+    if (!exportPayload) {
+      return;
+    }
     state.screen = "thanks";
-    state.exportPayload = buildExportPayload();
+    state.exportPayload = exportPayload;
     state.updatedAt = new Date().toISOString();
-    localStorage.setItem(FINAL_KEY, JSON.stringify(state.exportPayload));
+    localStorage.setItem(FINAL_KEY, JSON.stringify(exportPayload));
     saveDraft();
     goToScreen("thanks");
     renderThanks();
@@ -1620,7 +1750,10 @@
   }
 
   function renderThanks() {
-    var payload = state.exportPayload || buildExportPayload();
+    var payload = state.exportPayload || getValidatedExportPayload();
+    if (!payload) {
+      return;
+    }
     dom.thanksCopy.textContent = "Puedes descargar los tres archivos o volver a editar el perfil. El borrador sigue guardado localmente.";
     dom.downloadJson.dataset.payload = JSON.stringify(payload, null, 2);
     dom.downloadHtml.dataset.payload = buildExportHtml(payload);
@@ -1646,6 +1779,17 @@
     };
   }
 
+  function getValidatedExportPayload() {
+    var payload = validators.sanitizeExportPayload(buildExportPayload());
+    var validation = validators.validateExportPayload(payload);
+    if (!validation.valid) {
+      console.error("Invalid export payload", validation.errors || validation.message);
+      toast("Export inválido", validation.message || "No se pudo generar el export.");
+      return null;
+    }
+    return payload;
+  }
+
   function stripSummaryEditTargets(items) {
     return (items || []).map(function (item) {
       return {
@@ -1659,8 +1803,16 @@
     var sections = getVisibleSections();
     var location = findQuestionLocation(questionId, sections);
     if (!location) {
-      toast("No se puede editar", "Esa respuesta no está visible en este perfil.");
-      return;
+      var hiddenLocation = findQuestionLocation(questionId, getSections());
+      if (!hiddenLocation || !ensureSectionVisibleForQuestion(hiddenLocation.section.id)) {
+        toast("No se puede editar", "Esa respuesta no está visible en este perfil.");
+        return;
+      }
+      location = findQuestionLocation(questionId, getVisibleSections());
+      if (!location) {
+        toast("No se puede editar", "No se pudo reabrir la sección para esa respuesta.");
+        return;
+      }
     }
 
     pendingQuestionFocusId = questionId;
@@ -1668,6 +1820,37 @@
     state.currentSectionId = location.section.id;
     goToScreen("survey");
     renderSection();
+  }
+
+  function ensureSectionVisibleForQuestion(sectionId) {
+    var options = interestGateSectionMap[sectionId] || [];
+    if (!options.length) {
+      return false;
+    }
+
+    var selectedValues = getSelectedInterestValues();
+    var selectedLookup = toLookup(selectedValues);
+    var chosenOption = null;
+    for (var i = 0; i < options.length; i += 1) {
+      if (!selectedLookup[options[i].value]) {
+        chosenOption = options[i];
+        break;
+      }
+    }
+    if (!chosenOption) {
+      chosenOption = options[0];
+    }
+    if (!chosenOption) {
+      return false;
+    }
+
+    var nextValues = selectedValues.slice();
+    if (nextValues.indexOf(chosenOption.value) === -1) {
+      nextValues.push(chosenOption.value);
+    }
+    setAnswer(INTEREST_GATE_QUESTION_ID, uniqueList(nextValues));
+    interestGateWarningShown = false;
+    return true;
   }
 
   function focusQuestionForEdit(questionId) {
@@ -1797,7 +1980,10 @@
   }
 
   function downloadCurrentOutput(type) {
-    var payload = state.exportPayload || buildExportPayload();
+    var payload = state.exportPayload || getValidatedExportPayload();
+    if (!payload) {
+      return;
+    }
     var content = "";
     var filename = "";
     var mime = "text/plain;charset=utf-8";
@@ -1838,7 +2024,9 @@
       return;
     }
     state.updatedAt = new Date().toISOString();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    var draft = deepClone(state);
+    draft.exportPayload = null;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
     updateResumeBanner();
   }
 
@@ -1950,6 +2138,23 @@
 
   function normalizeText(value) {
     return String(value || "").trim();
+  }
+
+  function isValidDateValue(value) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+
+    var parts = value.split("-");
+    var year = Number(parts[0]);
+    var month = Number(parts[1]);
+    var day = Number(parts[2]);
+    var date = new Date(Date.UTC(year, month - 1, day));
+    return (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    );
   }
 
   function isEmpty(value) {
