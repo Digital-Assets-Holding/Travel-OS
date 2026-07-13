@@ -82,6 +82,10 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+button:active {
+  transform: translateY(1px);
+}
+
 ::selection {
   background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
@@ -445,6 +449,7 @@ h2 {
 
 .question-card {
   padding: 18px;
+  scroll-margin-top: 20px;
 }
 
 .question-head {
@@ -494,6 +499,9 @@ h2 {
 .choice-option {
   position: relative;
   display: block;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .choice-option input {
@@ -529,12 +537,17 @@ h2 {
   background: var(--accent);
   color: var(--accent-inverse);
   border-color: transparent;
-  box-shadow: 0 14px 24px rgba(16, 17, 20, 0.18);
+  font-weight: 600;
+  box-shadow: 0 18px 28px rgba(16, 17, 20, 0.22);
 }
 
 .choice-option input:focus-visible + span {
   outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
   outline-offset: 2px;
+}
+
+.choice-option:active span {
+  transform: translateY(0);
 }
 
 .multi-list {
@@ -549,6 +562,9 @@ h2 {
 
 .multi-item {
   position: relative;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .multi-item input {
@@ -557,7 +573,7 @@ h2 {
   inset: 0;
 }
 
-.multi-item label {
+.multi-item span {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -566,7 +582,6 @@ h2 {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-strong);
   background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
-  cursor: pointer;
   text-align: center;
   line-height: 1.3;
   transition:
@@ -575,14 +590,26 @@ h2 {
     background 180ms ease;
 }
 
-.multi-item input:checked + label {
+.multi-item input:checked + span {
   background: color-mix(in srgb, var(--accent) 92%, white 8%);
   color: var(--accent-inverse);
   border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 18px 28px rgba(16, 17, 20, 0.22);
 }
 
-.multi-item label:hover {
+.multi-item:hover span {
   transform: translateY(-1px);
+}
+
+.multi-item:active span {
+  transform: translateY(0);
+}
+
+.choice-option:focus-within span,
+.multi-item:focus-within span {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 2px;
 }
 
 .inline-list {
@@ -670,6 +697,70 @@ h2 {
 .result-card,
 .signal-card {
   padding: 16px;
+}
+
+.summary-jump-card {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+  position: relative;
+  padding-right: 92px;
+}
+
+.summary-jump-card::after {
+  content: "Editar";
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent-soft) 72%, transparent);
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.summary-jump-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 28px rgba(16, 17, 20, 0.12);
+}
+
+.summary-jump-card:active {
+  transform: translateY(0);
+}
+
+.summary-jump-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.summary-jump-hint {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.question-card.is-targeted {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-strong));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent), var(--shadow);
+}
+
+.question-card.is-targeted .question-title {
+  color: var(--accent);
 }
 
 .result-card h3,
@@ -856,7 +947,7 @@ h2 {
   }
 
   .choice-option span,
-  .multi-item label {
+  .multi-item span {
     min-height: 50px;
   }
 

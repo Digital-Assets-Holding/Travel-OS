@@ -7,6 +7,7 @@
   var STORAGE_KEY = "travel-os.traveler-dna.draft.v1";
   var FINAL_KEY = "travel-os.traveler-dna.final.v1";
   var interestGateWarningShown = false;
+  var pendingQuestionFocusId = "";
 
   var state = {
     screen: "welcome",
@@ -395,7 +396,10 @@
     hydrateQuestionValues(currentSection);
 
     window.scrollTo(0, 0);
-    if (typeof dom.sectionTitle.focus === "function") {
+    if (pendingQuestionFocusId) {
+      focusQuestionForEdit(pendingQuestionFocusId);
+      pendingQuestionFocusId = "";
+    } else if (typeof dom.sectionTitle.focus === "function") {
       try {
         dom.sectionTitle.focus({ preventScroll: true });
       } catch (error) {
@@ -409,6 +413,7 @@
   function renderQuestion(question) {
     var template = document.getElementById("question-template");
     var node = template.content.firstElementChild.cloneNode(true);
+    node.tabIndex = -1;
     var title = node.querySelector(".question-title");
     var help = node.querySelector(".question-help");
     var tag = node.querySelector(".question-tag");
@@ -1095,10 +1100,7 @@
   }
 
   function renderOverviewCard(item) {
-    var card = document.createElement("article");
-    card.className = "overview-card";
-    card.innerHTML = "<strong>" + escapeHtml(item.label) + "</strong><span>" + escapeHtml(item.value) + "</span>";
-    return card;
+    return createSummaryCard(item, "overview-card");
   }
 
   function renderResultCard(item) {
@@ -1138,9 +1140,41 @@
   }
 
   function renderSignalCard(item) {
-    var card = document.createElement("article");
-    card.className = "signal-card";
-    card.innerHTML = "<h3>" + escapeHtml(item.label) + "</h3><p>" + escapeHtml(item.value) + "</p>";
+    return createSummaryCard(item, "signal-card");
+  }
+
+  function createSummaryCard(item, baseClass) {
+    var hasEditTarget = Boolean(item && item.editTarget && item.editTarget.questionId);
+    var card = document.createElement(hasEditTarget ? "button" : "article");
+    card.className = baseClass;
+
+    if (hasEditTarget) {
+      card.type = "button";
+      card.classList.add("summary-jump-card");
+      card.setAttribute("aria-label", "Editar " + item.label);
+      card.addEventListener("click", function () {
+        requestQuestionEdit(item.editTarget.questionId);
+      });
+    }
+
+    if (baseClass === "overview-card") {
+      card.innerHTML =
+        "<strong>" +
+        escapeHtml(item.label) +
+        "</strong><span>" +
+        escapeHtml(item.value) +
+        "</span>" +
+        (hasEditTarget ? "<small class='summary-jump-hint'>Toca para editar</small>" : "");
+      return card;
+    }
+
+    card.innerHTML =
+      "<h3>" +
+      escapeHtml(item.label) +
+      "</h3><p>" +
+      escapeHtml(item.value) +
+      "</p>" +
+      (hasEditTarget ? "<small class='summary-jump-hint'>Toca para editar</small>" : "");
     return card;
   }
 
@@ -1150,22 +1184,22 @@
       title: state.name ? state.name + ", tu Traveler DNA está listo." : "Tu Traveler DNA está listo.",
       copy: profile.narrative,
       overview: [
-        { label: "Propósito", value: profile.signals.purpose },
-        { label: "Fechas", value: profile.signals.dates },
-        { label: "Presupuesto", value: profile.signals.budget },
-        { label: "Ritmo", value: profile.signals.pace }
+        { label: "Propósito", value: profile.signals.purpose, editTarget: { questionId: "trip_purpose" } },
+        { label: "Fechas", value: profile.signals.dates, editTarget: { questionId: "travel_start_date" } },
+        { label: "Presupuesto", value: profile.signals.budget, editTarget: { questionId: "budget_band" } },
+        { label: "Ritmo", value: profile.signals.pace, editTarget: { questionId: "pace" } }
       ],
       archetypes: profile.topArchetypes,
       signals: [
         { label: "Confidence", value: profile.signals.confidence },
-        { label: "Destino preferido", value: profile.signals.destination },
-        { label: "Flexibilidad", value: profile.signals.flexibility },
-        { label: "Compañía", value: profile.signals.party },
-        { label: "Accesibilidad", value: profile.signals.accessibility },
-        { label: "Fotografía", value: profile.signals.photo },
-        { label: "Wellness", value: profile.signals.wellness },
-        { label: "Intereses elegidos", value: profile.signals.interestsSelected },
-        { label: "Intereses omitidos", value: profile.signals.interestsRejected }
+        { label: "Destino preferido", value: profile.signals.destination, editTarget: { questionId: "destination_style" } },
+        { label: "Flexibilidad", value: profile.signals.flexibility, editTarget: { questionId: "travel_window" } },
+        { label: "Compañía", value: profile.signals.party, editTarget: { questionId: "party_size" } },
+        { label: "Accesibilidad", value: profile.signals.accessibility, editTarget: { questionId: "access_needs" } },
+        { label: "Fotografía", value: profile.signals.photo, editTarget: { questionId: "photo_preferences" } },
+        { label: "Wellness", value: profile.signals.wellness, editTarget: { questionId: "wellness_preferences" } },
+        { label: "Intereses elegidos", value: profile.signals.interestsSelected, editTarget: { questionId: "interest_gate" } },
+        { label: "Intereses omitidos", value: profile.signals.interestsRejected, editTarget: { questionId: "interest_gate" } }
       ],
       gating: profile.gating,
       payload: profile
@@ -1606,12 +1640,67 @@
       summary: {
         title: summary.title,
         copy: summary.copy,
-        overview: summary.overview,
+        overview: stripSummaryEditTargets(summary.overview),
         archetypes: summary.payload.topArchetypes,
-        signals: summary.signals,
+        signals: stripSummaryEditTargets(summary.signals),
         gating: summary.gating
       }
     };
+  }
+
+  function stripSummaryEditTargets(items) {
+    return (items || []).map(function (item) {
+      return {
+        label: item.label,
+        value: item.value
+      };
+    });
+  }
+
+  function requestQuestionEdit(questionId) {
+    var sections = getVisibleSections();
+    var location = findQuestionLocation(questionId, sections);
+    if (!location) {
+      toast("No se puede editar", "Esa respuesta no está visible en este perfil.");
+      return;
+    }
+
+    pendingQuestionFocusId = questionId;
+    state.sectionIndex = location.index;
+    state.currentSectionId = location.section.id;
+    goToScreen("survey");
+    renderSection();
+  }
+
+  function focusQuestionForEdit(questionId) {
+    var card = dom.questionStack.querySelector('[data-question-id="' + questionId + '"]');
+    if (!card) {
+      return;
+    }
+
+    card.classList.add("is-targeted");
+    setTimeout(function () {
+      card.classList.remove("is-targeted");
+    }, 1400);
+
+    scrollQuestionIntoView(card);
+  }
+
+  function findQuestionLocation(questionId, sections) {
+    var searchSections = sections || getVisibleSections();
+    for (var i = 0; i < searchSections.length; i += 1) {
+      var section = searchSections[i];
+      if ((section.questions || []).some(function (question) {
+        return question.id === questionId;
+      })) {
+        return {
+          section: section,
+          index: i
+        };
+      }
+    }
+
+    return null;
   }
 
   function buildExportHtml(payload) {
