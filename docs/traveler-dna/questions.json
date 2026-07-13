@@ -203,10 +203,11 @@
         },
         {
           "id": "destination_style",
-          "label": "Tipo de destino que más te atrae",
-          "help": "Puedes elegir el que mejor representa el viaje ideal.",
-          "type": "single",
+          "label": "Tipos de destino que más te atraen",
+          "help": "Selecciona uno o varios destinos que sí te atraen.",
+          "type": "multi",
           "required": true,
+          "minSelections": 1,
           "options": [
             {
               "value": "city",

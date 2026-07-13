@@ -247,7 +247,7 @@
       screen: candidate.screen || fallback.screen,
       sectionIndex: typeof candidate.sectionIndex === "number" ? candidate.sectionIndex : fallback.sectionIndex,
       currentSectionId: candidate.currentSectionId || fallback.currentSectionId,
-      answers: candidate.answers && typeof candidate.answers === "object" ? candidate.answers : {},
+      answers: normalizeLegacyAnswers(candidate.answers && typeof candidate.answers === "object" ? candidate.answers : {}),
       createdAt: candidate.createdAt || fallback.createdAt,
       updatedAt: candidate.updatedAt || fallback.updatedAt,
       completedAt: candidate.completedAt || null,
@@ -618,7 +618,7 @@
           control.checked = control.value === value;
         });
       } else if (question.type === "multi") {
-        var values = Array.isArray(value) ? value : [];
+        var values = normalizeMultiValue(value);
         controls.forEach(function (control) {
           control.checked = values.indexOf(control.value) !== -1;
         });
@@ -661,7 +661,7 @@
   }
 
   function getMultiValues(questionId) {
-    return Array.isArray(state.answers[questionId]) ? state.answers[questionId].slice() : [];
+    return normalizeMultiValue(state.answers[questionId]);
   }
 
   function setAnswer(questionId, value) {
@@ -726,7 +726,7 @@
       }
 
       if (question.type === "multi") {
-        var count = Array.isArray(value) ? value.length : 0;
+        var count = normalizeMultiValue(value).length;
         var minSelections = question.minSelections || (question.required ? 1 : 0);
         if (count < minSelections) {
           valid = false;
@@ -1311,7 +1311,7 @@
     }
 
     if (question.type === "multi") {
-      var values = Array.isArray(value) ? value : [];
+      var values = normalizeMultiValue(value);
       values.forEach(function (item) {
         var multiOption = findOption(question, item);
         if (multiOption) {
@@ -1490,7 +1490,7 @@
     var signals = {};
     signals.confidence = confidencePercent + "%";
     signals.purpose = labelFromValue("trip_purpose", answers.trip_purpose) || "No definido";
-    signals.destination = labelFromValue("destination_style", answers.destination_style) || "No definido";
+    signals.destination = formatSelections(answers.destination_style) || labelFromValue("destination_style", answers.destination_style) || "No definido";
     signals.flexibility = labelFromValue("travel_window", answers.travel_window) || "No definida";
     signals.dates = formatDateRange(answers.travel_start_date, answers.travel_end_date);
     signals.budget = labelFromValue("budget_band", answers.budget_band) || "No definido";
@@ -1553,14 +1553,15 @@
   }
 
   function formatSelections(values) {
-    if (!Array.isArray(values) || !values.length) {
+    var list = normalizeMultiValue(values);
+    if (!list.length) {
       return "";
     }
-    var question = findQuestionByValue(values[0]);
+    var question = findQuestionByValue(list[0]);
     if (!question) {
-      return values.join(", ");
+      return list.join(", ");
     }
-    return values
+    return list
       .map(function (value) {
         var option = findOption(question, value);
         return option ? option.label : value;
@@ -1918,6 +1919,35 @@
       return value.trim();
     }
     return value;
+  }
+
+  function normalizeMultiValue(value) {
+    if (Array.isArray(value)) {
+      return value
+        .map(function (item) {
+          return normalizeAnswerValue(item);
+        })
+        .filter(function (item) {
+          return !isEmpty(item);
+        });
+    }
+    if (typeof value === "string") {
+      var normalized = normalizeAnswerValue(value);
+      return normalized ? [normalized] : [];
+    }
+    if (typeof value === "number") {
+      return [value];
+    }
+    return [];
+  }
+
+  function normalizeLegacyAnswers(answers) {
+    var normalized = answers || {};
+    if (typeof normalized.destination_style === "string") {
+      var destination = normalizeAnswerValue(normalized.destination_style);
+      normalized.destination_style = destination ? [destination] : [];
+    }
+    return normalized;
   }
 
   function normalizeText(value) {
