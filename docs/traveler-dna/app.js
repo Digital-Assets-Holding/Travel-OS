@@ -582,9 +582,7 @@
 
     input.addEventListener("change", function () {
       if (input.type === "radio") {
-        if (input.checked) {
-          markSingleActive(question.id, option.value);
-        }
+        // El estado real se sincroniza con setAnswer + updateSingleSelection.
       } else {
         if (input.checked) {
           addMultiValue(question.id, option.value);
